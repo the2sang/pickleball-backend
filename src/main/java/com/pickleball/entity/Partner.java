@@ -33,6 +33,10 @@ public class Partner {
     @Column(name = "partner_address", nullable = false, length = 200)
     private String partnerAddress;
 
+    /**
+     * 사업주 등급: 0 = 승인요청(디폴트), 1 = 승인완료
+     */
+    @Builder.Default
     @Column(name = "partner_level", nullable = false, length = 10)
     private String partnerLevel = "0";
 

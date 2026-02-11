@@ -24,9 +24,11 @@ public class Reservation {
     @Column(nullable = false, length = 20)
     private String username;
 
+    @Builder.Default
     @Column(name = "cancel_yn", length = 1)
     private String cancelYn = "N";
 
+    @Builder.Default
     @Column(name = "time_name", nullable = false, length = 50)
     private String timeName = "일반예약";
 
@@ -36,6 +38,7 @@ public class Reservation {
     @Column(name = "time_slot", nullable = false, length = 20)
     private String timeSlot;
 
+    @Builder.Default
     @Column(name = "reserv_type", length = 10)
     private String reservType = "0";
 

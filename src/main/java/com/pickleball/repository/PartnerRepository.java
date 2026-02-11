@@ -9,19 +9,33 @@ import org.springframework.data.repository.query.Param;
 
 public interface PartnerRepository extends JpaRepository<Partner, Long> {
 
-    @Query("""
-        SELECT p FROM Partner p
-        WHERE p.partnerLevel = '1'
-          AND (p.businessPartner LIKE %:keyword%
-               OR p.partnerAddress LIKE %:keyword%)
-        ORDER BY p.businessPartner
-    """)
-    Page<Partner> searchPartners(@Param("keyword") String keyword, Pageable pageable);
+  @Query("""
+          SELECT p FROM Partner p
+          WHERE p.partnerLevel = '1'
+            AND p.businessPartner LIKE %:keyword%
+          ORDER BY p.businessPartner
+      """)
+  Page<Partner> searchPartners(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query("""
-        SELECT p FROM Partner p
-        WHERE p.partnerLevel = '1'
-        ORDER BY p.businessPartner
-    """)
-    Page<Partner> findActivePartners(Pageable pageable);
+  @Query("""
+          SELECT p FROM Partner p
+          WHERE p.partnerLevel = '1'
+          ORDER BY p.businessPartner
+      """)
+  Page<Partner> findActivePartners(Pageable pageable);
+
+  // ── 관리자용: partnerLevel 필터 없이 전체 조회 ──
+
+  @Query("""
+          SELECT p FROM Partner p
+          ORDER BY p.registDate DESC, p.businessPartner
+      """)
+  Page<Partner> findAllPartners(Pageable pageable);
+
+  @Query("""
+          SELECT p FROM Partner p
+          WHERE p.businessPartner LIKE %:keyword%
+          ORDER BY p.registDate DESC, p.businessPartner
+      """)
+  Page<Partner> searchAllPartners(@Param("keyword") String keyword, Pageable pageable);
 }
