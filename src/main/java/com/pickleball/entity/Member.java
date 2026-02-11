@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "member")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Member {
 
@@ -16,11 +18,8 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
-    private String username;
-
-    @Column(nullable = false, length = 255)
-    private String password;
+    @Column(name = "account_id", nullable = false, unique = true)
+    private Long accountId;
 
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
@@ -67,7 +66,8 @@ public class Member {
     @PrePersist
     protected void onCreate() {
         createDate = LocalDateTime.now();
-        if (registDate == null) registDate = LocalDate.now();
+        if (registDate == null)
+            registDate = LocalDate.now();
     }
 
     @PreUpdate

@@ -25,12 +25,22 @@ public class AuthController {
     }
 
     /**
-     * 회원가입 + 자동 로그인
+     * 일반 회원가입 + 자동 로그인
      * POST /api/v1/auth/signup
      */
     @PostMapping("/signup")
     public ResponseEntity<AuthDto.TokenResponse> signup(
             @Valid @RequestBody AuthDto.SignupRequest request) {
         return ResponseEntity.status(201).body(authService.signup(request));
+    }
+
+    /**
+     * 사업장 회원가입 + 자동 로그인
+     * POST /api/v1/auth/signup/partner
+     */
+    @PostMapping("/signup/partner")
+    public ResponseEntity<AuthDto.TokenResponse> signupPartner(
+            @Valid @RequestBody AuthDto.PartnerSignupRequest request) {
+        return ResponseEntity.status(201).body(authService.signupPartner(request));
     }
 }

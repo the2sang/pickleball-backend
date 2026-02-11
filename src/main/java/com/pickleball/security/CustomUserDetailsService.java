@@ -1,8 +1,8 @@
 package com.pickleball.security;
 
-import com.pickleball.entity.Member;
+import com.pickleball.entity.Account;
 import com.pickleball.entity.MemberRole;
-import com.pickleball.repository.MemberRepository;
+import com.pickleball.repository.AccountRepository;
 import com.pickleball.repository.MemberRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,25 +18,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final MemberRepository memberRepository;
-    private final MemberRoleRepository memberRoleRepository;
+        private final AccountRepository accountRepository;
+        private final MemberRoleRepository memberRoleRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "회원을 찾을 수 없습니다: " + username));
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                Account account = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "계정을 찾을 수 없습니다: " + username));
 
-        List<MemberRole> roles = memberRoleRepository.findByUsername(username);
+                List<MemberRole> roles = memberRoleRepository.findByUsername(username);
 
-        List<SimpleGrantedAuthority> authorities = roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRoles()))
-                .toList();
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                                .map(role -> new SimpleGrantedAuthority(role.getRoles()))
+                                .toList();
 
-        return User.builder()
-                .username(member.getUsername())
-                .password(member.getPassword())
-                .authorities(authorities)
-                .build();
-    }
+                return User.builder()
+                                .username(account.getUsername())
+                                .password(account.getPassword())
+                                .authorities(authorities)
+                                .build();
+        }
 }

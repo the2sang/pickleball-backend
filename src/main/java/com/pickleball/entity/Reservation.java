@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservation")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Reservation {
 
@@ -48,9 +50,8 @@ public class Reservation {
     private Court court;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "username", referencedColumnName = "username",
-                insertable = false, updatable = false)
-    private Member member;
+    @JoinColumn(name = "username", referencedColumnName = "username", insertable = false, updatable = false)
+    private Account account;
 
     @PrePersist
     protected void onCreate() {

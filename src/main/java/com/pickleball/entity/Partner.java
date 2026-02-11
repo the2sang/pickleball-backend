@@ -7,14 +7,19 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "partner")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Partner {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "account_id", unique = true)
+    private Long accountId;
 
     @Column(name = "business_partner", nullable = false, length = 100)
     private String businessPartner;
