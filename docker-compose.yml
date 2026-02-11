@@ -12,7 +12,8 @@ services:
     #    tmpfs:
     #      size: 134217728 # 128*2^20 bytes = 128Mb
     environment:
-      POSTGRES_PASSWORD:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: WLgLriNFvnerPPYxHdwmELXQbuscYmov
 
   adminer:
     image: adminer
