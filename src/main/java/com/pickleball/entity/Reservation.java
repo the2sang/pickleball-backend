@@ -1,5 +1,6 @@
 package com.pickleball.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -48,10 +49,12 @@ public class Reservation {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "court_id", insertable = false, updatable = false)
     private Court court;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "username", referencedColumnName = "username", insertable = false, updatable = false)
     private Account account;

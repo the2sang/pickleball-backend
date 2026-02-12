@@ -39,6 +39,7 @@ public class ReservationDto {
         private int reservedCount;
         private int capacity;
         private String status; // AVAILABLE, FULL, CLOSED
+        private String scheduleType; // OPEN_GAME, RENTAL
         private List<PlayerInfo> players;
     }
 
@@ -50,6 +51,8 @@ public class ReservationDto {
         private String duprPoint;
         private String sex;
         private LocalDateTime reservedAt;
+        private int orderNumber; // 예약 순서 (1, 2, 3, ...)
+        private boolean isWaiting; // 대기 회원 여부
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor

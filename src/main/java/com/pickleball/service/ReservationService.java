@@ -27,10 +27,7 @@ public class ReservationService {
         private final MemberSuspensionRepository suspensionRepository;
         private final RejectVoteRepository rejectVoteRepository;
         private final MemberRepository memberRepository;
-
-        private static final List<String> DEFAULT_TIME_SLOTS = Arrays.asList(
-                        "06:00~08:00", "08:00~10:00", "10:00~12:00", "12:00~14:00",
-                        "14:00~16:00", "16:00~18:00", "18:00~20:00", "20:00~22:00");
+        private final CourtScheduleRepository courtScheduleRepository;
 
         /**
          * 코트별 시간대 예약 현황 조회
@@ -40,29 +37,53 @@ public class ReservationService {
                 Court court = courtRepository.findById(courtId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
 
-                List<ReservationDto.SlotInfo> slots = DEFAULT_TIME_SLOTS.stream()
-                                .map(timeSlot -> {
+                List<CourtSchedule> schedules = courtScheduleRepository
+                                .findByCourtIdAndGameDateOrderByStartTime(courtId, gameDate);
+
+                List<ReservationDto.SlotInfo> slots = schedules.stream()
+                                .map(schedule -> {
+                                        String timeSlot = formatTimeSlot(schedule.getStartTime(),
+                                                        schedule.getEndTime());
                                         List<Reservation> reservations = reservationRepository
                                                         .findActivePlayers(courtId, gameDate, timeSlot);
 
                                         int count = reservations.size();
                                         int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber()
                                                         : 6;
-                                        String status = count >= capacity ? "FULL" : "AVAILABLE";
+                                        boolean isFull = count >= capacity;
+
+                                        // Check if closed by partner setting (Rentals might be treated differently?)
+                                        // For OPEN_GAME, it's bookable. For RENTAL, maybe it shows as "Rental Only" or
+                                        // similar?
+                                        // For now, treat RENTAL as bookable or just display type.
+                                        // Existing logic had "reservClose".
+
+                                        String status = isFull ? "FULL" : "AVAILABLE";
 
                                         if ("Y".equals(court.getReservClose())) {
                                                 status = "CLOSED";
                                         }
 
-                                        List<ReservationDto.PlayerInfo> players = reservations.stream()
-                                                        .map(r -> buildPlayerInfo(r))
-                                                        .toList();
+                                        // If using CourtSchedule, we can also check schedule.getScheduleType()
+                                        // e.g. if RENTAL, maybe status is specific?
+                                        // For now, adhere to existing logic but use dynamic slots.
+
+                                        // Build player list with order and waiting status
+                                        List<ReservationDto.PlayerInfo> players = new java.util.ArrayList<>();
+                                        for (int i = 0; i < reservations.size(); i++) {
+                                                Reservation r = reservations.get(i);
+                                                ReservationDto.PlayerInfo playerInfo = buildPlayerInfo(r);
+                                                playerInfo.setOrderNumber(i + 1);
+                                                playerInfo.setWaiting(i >= capacity); // 정원 초과는 대기
+                                                players.add(playerInfo);
+                                        }
 
                                         return ReservationDto.SlotInfo.builder()
                                                         .timeSlot(timeSlot)
                                                         .reservedCount(count)
                                                         .capacity(capacity)
                                                         .status(status)
+                                                        .scheduleType(schedule.getScheduleType())
                                                         .players(players)
                                                         .build();
                                 })
@@ -77,16 +98,33 @@ public class ReservationService {
                                 .build();
         }
 
+        private String formatTimeSlot(LocalTime start, LocalTime end) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+                return start.format(formatter) + "~" + end.format(formatter);
+        }
+
         /**
          * 특정 시간대 예약자 상세 조회
          */
         @Transactional(readOnly = true)
         public List<ReservationDto.PlayerInfo> getSlotPlayers(
                         Long courtId, LocalDate gameDate, String timeSlot) {
-                return reservationRepository.findActivePlayers(courtId, gameDate, timeSlot)
-                                .stream()
-                                .map(r -> buildPlayerInfo(r))
-                                .toList();
+                Court court = courtRepository.findById(courtId)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
+                int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6;
+
+                List<Reservation> reservations = reservationRepository.findActivePlayers(courtId, gameDate, timeSlot);
+                List<ReservationDto.PlayerInfo> players = new java.util.ArrayList<>();
+
+                for (int i = 0; i < reservations.size(); i++) {
+                        Reservation r = reservations.get(i);
+                        ReservationDto.PlayerInfo playerInfo = buildPlayerInfo(r);
+                        playerInfo.setOrderNumber(i + 1);
+                        playerInfo.setWaiting(i >= capacity);
+                        players.add(playerInfo);
+                }
+
+                return players;
         }
 
         /**

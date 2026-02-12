@@ -1,7 +1,7 @@
 package com.pickleball.controller;
 
+import com.pickleball.dto.CourtDto;
 import com.pickleball.dto.PartnerDto;
-import com.pickleball.entity.Court;
 import com.pickleball.service.PartnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,10 @@ public class PartnerController {
      * GET /api/v1/partners/{id}/courts
      */
     @GetMapping("/{id}/courts")
-    public ResponseEntity<List<Court>> getCourts(@PathVariable Long id) {
-        return ResponseEntity.ok(partnerService.getCourtsByPartner(id));
+    public ResponseEntity<List<CourtDto.Response>> getCourts(@PathVariable Long id) {
+        return ResponseEntity.ok(partnerService.getCourtsByPartner(id)
+                .stream()
+                .map(CourtDto.Response::from)
+                .toList());
     }
 }
