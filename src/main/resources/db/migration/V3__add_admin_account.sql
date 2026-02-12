@@ -8,6 +8,6 @@ VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
 ON CONFLICT (username) DO NOTHING;
 
 -- admin 권한 부여
-INSERT INTO member_role (username, roles)
-VALUES ('admin', 'ROLE_ADMIN')
+INSERT INTO member_role (username, roles, create_date, update_date)
+VALUES ('admin', 'ROLE_ADMIN', now(), now())
 ON CONFLICT DO NOTHING;

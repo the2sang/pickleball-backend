@@ -45,6 +45,8 @@ public class ReservationDto {
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class PlayerInfo {
+        private Long reservationId;
+        private String username;
         private String name;
         private String nicName;
         private String gameLevel;

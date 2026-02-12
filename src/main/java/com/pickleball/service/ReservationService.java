@@ -135,6 +135,8 @@ public class ReservationService {
                 Member member = memberRepository.findByAccountId(account.getId()).orElse(null);
 
                 return ReservationDto.PlayerInfo.builder()
+                                .reservationId(reservation.getId())
+                                .username(account.getUsername())
                                 .name(account.getName())
                                 .nicName(member != null ? member.getNicName() : null)
                                 .gameLevel(member != null ? member.getGameLevel() : null)
