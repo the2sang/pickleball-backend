@@ -5,7 +5,7 @@ spring:
   application:
     name: pickleball-reservation-api
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:prod}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -32,8 +32,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:dGhpc0lzQVZlcnlMb25nU2VjcmV0S2V5Rm9yUGlja2xlYmFsbEFwaUF0TGVhc3QzMkJ5dGVz}
-    expiration-ms: 3600000
-    refresh-expiration-ms: 86400000
+    expiration-ms: 7200000
+    refresh-expiration-ms: 31536000000
 
 # Springdoc
 springdoc:
