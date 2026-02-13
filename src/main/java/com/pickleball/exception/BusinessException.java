@@ -22,7 +22,8 @@ public class BusinessException extends RuntimeException {
         // 403
         MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "MEMBER_SUSPENDED", "해당 사업장에서 정지된 회원입니다"),
         VOTE_REJECTED(HttpStatus.FORBIDDEN, "VOTE_REJECTED", "기존 예약자의 과반 거부 투표로 제한됩니다"),
-        CANCEL_DEADLINE_PASSED(HttpStatus.FORBIDDEN, "CANCEL_DEADLINE_PASSED", "게임 개시 4시간 전 이후에는 취소할 수 없습니다"),
+        CANCEL_DEADLINE_PASSED(HttpStatus.FORBIDDEN, "CANCEL_DEADLINE_PASSED", "게임 개시 2시간 전 이후에는 취소할 수 없습니다"),
+        GAME_TIME_PASSED(HttpStatus.FORBIDDEN, "GAME_TIME_PASSED", "이미 지난 시간대는 예약할 수 없습니다"),
         COURT_CLOSED(HttpStatus.FORBIDDEN, "COURT_CLOSED", "예약이 마감된 코트입니다"),
         NOT_OWNER(HttpStatus.FORBIDDEN, "NOT_OWNER", "본인의 예약만 취소할 수 있습니다"),
 

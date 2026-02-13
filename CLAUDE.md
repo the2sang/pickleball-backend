@@ -61,7 +61,7 @@ Core entities and relationships:
 5. Rejection vote majority check
 6. Persist reservation
 
-**Reservation cancellation** enforces a 4-hour deadline before game start time and uses soft delete (`cancelYn='Y'`).
+**Reservation cancellation** enforces a 2-hour deadline before game start time and uses soft delete (`cancelYn='Y'`).
 
 **Time slots** are hard-coded as 8 two-hour blocks from 06:00 to 22:00.
 

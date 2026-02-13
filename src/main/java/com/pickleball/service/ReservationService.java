@@ -167,6 +167,12 @@ public class ReservationService {
                                         throw new BusinessException(ErrorCode.MEMBER_SUSPENDED);
                                 });
 
+                // 2.5. 현재 시간이 지난 시간대인지 확인
+                LocalDateTime gameStart = parseGameStart(request.getGameDate(), request.getTimeSlot());
+                if (LocalDateTime.now().isAfter(gameStart)) {
+                        throw new BusinessException(ErrorCode.GAME_TIME_PASSED);
+                }
+
                 // 3. 중복 예약 확인
                 reservationRepository.findByUsernameAndCourtIdAndGameDateAndTimeSlotAndCancelYnNot(
                                 username, request.getCourtId(), request.getGameDate(),
@@ -233,10 +239,10 @@ public class ReservationService {
                         throw new BusinessException(ErrorCode.NOT_OWNER);
                 }
 
-                // 게임 개시 4시간 전 체크
+                // 게임 개시 2시간 전 체크
                 LocalDateTime gameStart = parseGameStart(
                                 reservation.getGameDate(), reservation.getTimeSlot());
-                LocalDateTime deadline = gameStart.minusHours(4);
+                LocalDateTime deadline = gameStart.minusHours(2);
 
                 if (LocalDateTime.now().isAfter(deadline)) {
                         throw new BusinessException(ErrorCode.CANCEL_DEADLINE_PASSED);

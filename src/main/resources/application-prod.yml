@@ -3,9 +3,9 @@
 # ================================
 spring:
   datasource:
-    url: jdbc:postgresql://shuttle.proxy.rlwy.net:44842/railway
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:WLgLriNFvnerPPYxHdwmELXQbuscYmov}
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+    username: ${DB_USERNAME:pickleball.rkchvxoheiiabwplcfwy}
+    password: ${DB_PASSWORD:alswl1!A314}
 
   jpa:
     hibernate:
