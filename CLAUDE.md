@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build
 ./gradlew build
 
-# Run application (requires PostgreSQL on localhost:5432, database: pickleball_db)
+# Run application (requires PostgreSQL on localhost:5432, database: postgres)
 ./gradlew bootRun
 
 # Run all tests
