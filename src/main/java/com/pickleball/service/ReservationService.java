@@ -14,7 +14,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -25,7 +29,6 @@ public class ReservationService {
         private final CourtRepository courtRepository;
         private final MemberSuspensionRepository suspensionRepository;
         private final RejectVoteRepository rejectVoteRepository;
-        private final MemberRepository memberRepository;
         private final AccountRepository accountRepository;
         private final CourtScheduleRepository courtScheduleRepository;
 
@@ -40,14 +43,24 @@ public class ReservationService {
                 List<CourtSchedule> schedules = courtScheduleRepository
                                 .findByCourtIdAndGameDateOrderByStartTime(courtId, gameDate);
 
+                List<ReservationRepositoryCustom.ActivePlayerRow> allRows = reservationRepository
+                                .findActivePlayerRows(courtId, gameDate);
+
+                Map<String, List<ReservationRepositoryCustom.ActivePlayerRow>> rowsBySlot = allRows.stream()
+                                .collect(Collectors.groupingBy(
+                                                ReservationRepositoryCustom.ActivePlayerRow::timeSlot,
+                                                LinkedHashMap::new,
+                                                Collectors.toList()));
+
                 List<ReservationDto.SlotInfo> slots = schedules.stream()
                                 .map(schedule -> {
                                         String timeSlot = formatTimeSlot(schedule.getStartTime(),
                                                         schedule.getEndTime());
-                                        List<Reservation> reservations = reservationRepository
-                                                        .findActivePlayers(courtId, gameDate, timeSlot);
 
-                                        int count = reservations.size();
+                                        List<ReservationRepositoryCustom.ActivePlayerRow> rows = rowsBySlot
+                                                        .getOrDefault(timeSlot, List.of());
+
+                                        int count = rows.size();
                                         int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber()
                                                         : 6;
                                         boolean isFull = count >= capacity;
@@ -69,13 +82,21 @@ public class ReservationService {
                                         // For now, adhere to existing logic but use dynamic slots.
 
                                         // Build player list with order and waiting status
-                                        List<ReservationDto.PlayerInfo> players = new java.util.ArrayList<>();
-                                        for (int i = 0; i < reservations.size(); i++) {
-                                                Reservation r = reservations.get(i);
-                                                ReservationDto.PlayerInfo playerInfo = buildPlayerInfo(r);
-                                                playerInfo.setOrderNumber(i + 1);
-                                                playerInfo.setWaiting(i >= capacity); // 정원 초과는 대기
-                                                players.add(playerInfo);
+                                        List<ReservationDto.PlayerInfo> players = new ArrayList<>();
+                                        for (int i = 0; i < rows.size(); i++) {
+                                                ReservationRepositoryCustom.ActivePlayerRow row = rows.get(i);
+                                                players.add(ReservationDto.PlayerInfo.builder()
+                                                                .reservationId(row.reservationId())
+                                                                .username(row.username())
+                                                                .name(row.name())
+                                                                .nicName(row.nicName())
+                                                                .gameLevel(row.gameLevel())
+                                                                .duprPoint(row.duprPoint())
+                                                                .sex(row.sex())
+                                                                .reservedAt(row.reservedAt())
+                                                                .orderNumber(i + 1)
+                                                                .isWaiting(i >= capacity)
+                                                                .build());
                                         }
 
                                         return ReservationDto.SlotInfo.builder()
@@ -113,37 +134,27 @@ public class ReservationService {
                                 .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
                 int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6;
 
-                List<Reservation> reservations = reservationRepository.findActivePlayers(courtId, gameDate, timeSlot);
-                List<ReservationDto.PlayerInfo> players = new java.util.ArrayList<>();
+                List<ReservationRepositoryCustom.ActivePlayerRow> rows = reservationRepository
+                                .findActivePlayerRows(courtId, gameDate, timeSlot);
 
-                for (int i = 0; i < reservations.size(); i++) {
-                        Reservation r = reservations.get(i);
-                        ReservationDto.PlayerInfo playerInfo = buildPlayerInfo(r);
-                        playerInfo.setOrderNumber(i + 1);
-                        playerInfo.setWaiting(i >= capacity);
-                        players.add(playerInfo);
+                List<ReservationDto.PlayerInfo> players = new ArrayList<>();
+                for (int i = 0; i < rows.size(); i++) {
+                        ReservationRepositoryCustom.ActivePlayerRow row = rows.get(i);
+                        players.add(ReservationDto.PlayerInfo.builder()
+                                        .reservationId(row.reservationId())
+                                        .username(row.username())
+                                        .name(row.name())
+                                        .nicName(row.nicName())
+                                        .gameLevel(row.gameLevel())
+                                        .duprPoint(row.duprPoint())
+                                        .sex(row.sex())
+                                        .reservedAt(row.reservedAt())
+                                        .orderNumber(i + 1)
+                                        .isWaiting(i >= capacity)
+                                        .build());
                 }
 
                 return players;
-        }
-
-        /**
-         * 예약 정보에서 PlayerInfo 빌드 (Account + Member 조회)
-         */
-        private ReservationDto.PlayerInfo buildPlayerInfo(Reservation reservation) {
-                Account account = reservation.getAccount();
-                Member member = memberRepository.findByAccountId(account.getId()).orElse(null);
-
-                return ReservationDto.PlayerInfo.builder()
-                                .reservationId(reservation.getId())
-                                .username(account.getUsername())
-                                .name(account.getName())
-                                .nicName(member != null ? member.getNicName() : null)
-                                .gameLevel(member != null ? member.getGameLevel() : null)
-                                .duprPoint(member != null ? member.getDuprPoint() : null)
-                                .sex(member != null ? member.getSex() : null)
-                                .reservedAt(reservation.getCreateDate())
-                                .build();
         }
 
         /**
