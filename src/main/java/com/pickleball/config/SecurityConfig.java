@@ -92,8 +92,12 @@ public class SecurityConfig {
         // With allowCredentials=true, Spring will echo back the request Origin
         // when it matches an allowedOriginPattern.
         configuration.setAllowedOriginPatterns(List.of(
+                "https://localhost:*",
+                "https://127.0.0.1:*",
                 "http://localhost:*",
                 "http://127.0.0.1:*",
+                "https://*.ngrok-free.dev",
+                "http://*.ngrok-free.dev",
                 "https://*.ngrok-free.app",
                 "http://*.ngrok-free.app",
                 "https://*.ngrok.io",
