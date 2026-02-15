@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -59,6 +60,8 @@ public class PartnerReservationService {
             throw new BusinessException(BusinessException.ErrorCode.NOT_OWNER);
         }
 
+        validateNoOverlap(request.getTimeSlots());
+
         // 기존 설정 삭제 (해당 날짜의 모든 스케줄) -> 또는 업데이트 로직
         // 여기서는 간단하게 해당 날짜의 스케줄을 삭제하고 새로 등록하는 방식 사용
         courtScheduleRepository.deleteByCourtIdAndGameDate(request.getCourtId(), request.getDate());
@@ -73,6 +76,85 @@ public class PartnerReservationService {
                     .scheduleType(slot.getType())
                     .build();
             courtScheduleRepository.save(schedule);
+        }
+    }
+
+    private void validateNoOverlap(List<PartnerReservationDto.TimeSlotSetting> timeSlots) {
+        if (timeSlots == null || timeSlots.size() < 2) {
+            if (timeSlots == null || timeSlots.isEmpty()) {
+                return;
+            }
+
+            validateSlotBoundary(timeSlots.get(0));
+            return;
+        }
+
+        List<TimeSlotRange> sorted = timeSlots.stream()
+                .map(this::toRange)
+                .sorted((a, b) -> Integer.compare(a.startMinute, b.startMinute))
+                .toList();
+
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            if (sorted.get(i).endMinute > sorted.get(i + 1).startMinute) {
+                throw new BusinessException(BusinessException.ErrorCode.SCHEDULE_OVERLAP);
+            }
+        }
+    }
+
+    private void validateSlotBoundary(PartnerReservationDto.TimeSlotSetting slot) {
+        toRange(slot);
+    }
+
+    private TimeSlotRange toRange(PartnerReservationDto.TimeSlotSetting slot) {
+        if (slot == null || slot.getStartTime() == null || slot.getEndTime() == null) {
+            throw new BusinessException(BusinessException.ErrorCode.INVALID_TIME_SLOT);
+        }
+
+        LocalTime startTime = parseTime(slot.getStartTime());
+        LocalTime endTime = parseTime(slot.getEndTime());
+        int startMinute = toMinute(startTime);
+        int endMinute = isMidnight(slot.getEndTime()) ? 1440 : toMinute(endTime);
+
+        if (startMinute >= endMinute) {
+            throw new BusinessException(BusinessException.ErrorCode.INVALID_TIME_SLOT);
+        }
+
+        return new TimeSlotRange(startMinute, endMinute);
+    }
+
+    private int toMinute(LocalTime time) {
+        return time.getHour() * 60 + time.getMinute();
+    }
+
+    private boolean isMidnight(String time) {
+        return "00:00".equals(normalizeTime(time));
+    }
+
+    private String normalizeTime(String time) {
+        return time.trim();
+    }
+
+    private LocalTime parseTime(String value) {
+        String normalized = value.trim();
+
+        try {
+            return LocalTime.parse(normalized);
+        } catch (DateTimeParseException e) {
+            if ("24:00".equals(normalized)) {
+                return LocalTime.MIDNIGHT;
+            }
+
+            throw new BusinessException(BusinessException.ErrorCode.INVALID_TIME_SLOT);
+        }
+    }
+
+    private static class TimeSlotRange {
+        private final int startMinute;
+        private final int endMinute;
+
+        private TimeSlotRange(int startMinute, int endMinute) {
+            this.startMinute = startMinute;
+            this.endMinute = endMinute;
         }
     }
 }

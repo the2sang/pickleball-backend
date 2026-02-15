@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -27,6 +26,7 @@ public class ReservationService {
         private final MemberSuspensionRepository suspensionRepository;
         private final RejectVoteRepository rejectVoteRepository;
         private final MemberRepository memberRepository;
+        private final AccountRepository accountRepository;
         private final CourtScheduleRepository courtScheduleRepository;
 
         /**
@@ -150,8 +150,8 @@ public class ReservationService {
          * 예약 신청 (핵심 비즈니스 로직)
          */
         @Transactional
-        public ReservationDto.Response createReservation(
-                        ReservationDto.CreateRequest request, String username) {
+         public ReservationDto.Response createReservation(
+                         ReservationDto.CreateRequest request, String username) {
 
                 // 1. 코트 유효성 확인
                 Court court = courtRepository.findById(request.getCourtId())
@@ -171,6 +171,25 @@ public class ReservationService {
                 LocalDateTime gameStart = parseGameStart(request.getGameDate(), request.getTimeSlot());
                 if (LocalDateTime.now().isAfter(gameStart)) {
                         throw new BusinessException(ErrorCode.GAME_TIME_PASSED);
+                }
+
+                Account account = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                boolean isGeneralMember = "MEMBER".equalsIgnoreCase(
+                                account.getAccountType() != null ? account.getAccountType().trim() : "");
+
+                LocalTime[] requestedSlot = parseTimeSlotRange(request.getTimeSlot());
+                CourtSchedule schedule = courtScheduleRepository
+                                .findByCourtIdAndGameDateAndStartTimeAndEndTime(
+                                                request.getCourtId(),
+                                                request.getGameDate(),
+                                                requestedSlot[0],
+                                                requestedSlot[1])
+                                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TIME_SLOT));
+
+                if (isGeneralMember && "RENTAL".equalsIgnoreCase(
+                                schedule.getScheduleType() != null ? schedule.getScheduleType().trim() : "")) {
+                        throw new BusinessException(ErrorCode.RENTAL_NOT_ALLOWED);
                 }
 
                 // 3. 중복 예약 확인
@@ -277,6 +296,71 @@ public class ReservationService {
                 // timeSlot: "08:00~10:00" -> 시작시간 추출
                 String startTime = timeSlot.split("~")[0].trim();
                 return LocalDateTime.of(gameDate,
-                                LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")));
+                                parseTime(startTime));
+        }
+
+        private LocalTime[] parseTimeSlotRange(String timeSlot) {
+                if (timeSlot == null) {
+                        throw new BusinessException(ErrorCode.INVALID_TIME_SLOT);
+                }
+
+                String[] split = timeSlot.split("~");
+                if (split.length != 2) {
+                        throw new BusinessException(ErrorCode.INVALID_TIME_SLOT);
+                }
+
+                String startTimeText = split[0].trim();
+                String endTimeText = split[1].trim();
+
+                LocalTime startTime = parseTime(startTimeText);
+                LocalTime endTime = parseTime(endTimeText);
+
+                int startMinute = toMinuteForValidation(startTimeText, false);
+                int endMinute = toMinuteForValidation(endTimeText, true);
+
+                if (startMinute == endMinute
+                        || endMinute <= startMinute
+                        || startMinute < 0
+                        || endMinute < 0) {
+                        throw new BusinessException(ErrorCode.INVALID_TIME_SLOT);
+                }
+
+                return new LocalTime[] { startTime, endTime };
+        }
+
+        private int toMinuteForValidation(String value, boolean isEndTime) {
+                String normalized = value == null ? "" : value.trim();
+
+                if ("24:00".equals(normalized)) {
+                        return 1440;
+                }
+
+                if ("00:00".equals(normalized)) {
+                        return isEndTime ? 1440 : 0;
+                }
+
+                return toMinuteForValidation(parseTime(normalized));
+        }
+
+        private int toMinuteForValidation(LocalTime value) {
+                if (value == null) {
+                        return -1;
+                }
+
+                return value.getHour() * 60 + value.getMinute();
+        }
+
+        private LocalTime parseTime(String value) {
+                String normalized = value == null ? "" : value.trim();
+
+                try {
+                        return LocalTime.parse(normalized, DateTimeFormatter.ofPattern("HH:mm"));
+                } catch (Exception e) {
+                        if ("24:00".equals(normalized)) {
+                                return LocalTime.MIDNIGHT;
+                        }
+
+                        throw new BusinessException(ErrorCode.INVALID_TIME_SLOT);
+                }
         }
 }
