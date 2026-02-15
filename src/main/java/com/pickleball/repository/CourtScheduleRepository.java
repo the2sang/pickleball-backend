@@ -7,10 +7,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface CourtScheduleRepository extends JpaRepository<CourtSchedule, Long> {
     List<CourtSchedule> findByCourtIdAndGameDateOrderByStartTime(Long courtId, LocalDate gameDate);
+
+    Optional<CourtSchedule> findByCourtIdAndGameDateAndStartTimeAndEndTime(
+                    Long courtId,
+                    LocalDate gameDate,
+                    LocalTime startTime,
+                    LocalTime endTime);
 
     @Modifying
     @Query("DELETE FROM CourtSchedule c WHERE c.courtId = :courtId AND c.gameDate = :gameDate")
