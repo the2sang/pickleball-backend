@@ -41,6 +41,16 @@ public class AuthDto {
         private String circleName;
         private String gameLevel;
         private String duprPoint;
+
+        @NotNull
+        private Boolean agreeService;
+
+        @NotNull
+        private Boolean agreePrivacy;
+
+        private Boolean agreeMarketing;
+
+        private Boolean agreeAll;
     }
 
     @Data
@@ -66,6 +76,16 @@ public class AuthDto {
         private String partnerAccount;
         private String partnerBank;
         private String howToPay;
+
+        @NotNull
+        private Boolean agreeService;
+
+        @NotNull
+        private Boolean agreePrivacy;
+
+        private Boolean agreeMarketing;
+
+        private Boolean agreeAll;
     }
 
     @Data

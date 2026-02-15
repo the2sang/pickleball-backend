@@ -57,6 +57,22 @@ public class Member {
     @Column(name = "regist_date", nullable = false)
     private LocalDate registDate;
 
+    @Builder.Default
+    @Column(name = "agree_all_yn", nullable = false, length = 1)
+    private String agreeAllYn = "N";
+
+    @Builder.Default
+    @Column(name = "agree_service_yn", nullable = false, length = 1)
+    private String agreeServiceYn = "N";
+
+    @Builder.Default
+    @Column(name = "agree_privacy_yn", nullable = false, length = 1)
+    private String agreePrivacyYn = "N";
+
+    @Builder.Default
+    @Column(name = "agree_marketing_yn", nullable = false, length = 1)
+    private String agreeMarketingYn = "N";
+
     @Column(name = "create_date", nullable = false, updatable = false)
     private LocalDateTime createDate;
 

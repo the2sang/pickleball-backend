@@ -18,6 +18,8 @@ public class BusinessException extends RuntimeException {
         // 400
         COURT_FULL(HttpStatus.BAD_REQUEST, "COURT_FULL", "해당 시간대 정원이 마감되었습니다"),
         INVALID_TIME_SLOT(HttpStatus.BAD_REQUEST, "INVALID_TIME_SLOT", "유효하지 않은 시간대입니다"),
+        INVALID_REQUEST_STATE(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_STATE", "요청 상태가 올바르지 않습니다"),
+        TERMS_REQUIRED(HttpStatus.BAD_REQUEST, "TERMS_REQUIRED", "필수 약관에 동의해야 가입할 수 있습니다"),
 
         // 403
         MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "MEMBER_SUSPENDED", "해당 사업장에서 정지된 회원입니다"),
@@ -46,6 +48,18 @@ public class BusinessException extends RuntimeException {
             this.status = status;
             this.code = code;
             this.message = message;
+        }
+
+        public HttpStatus getStatus() {
+            return status;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 }

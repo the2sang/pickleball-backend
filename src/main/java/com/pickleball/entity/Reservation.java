@@ -43,6 +43,10 @@ public class Reservation {
     @Column(name = "reserv_type", length = 10)
     private String reservType = "0";
 
+    @Builder.Default
+    @Column(name = "approval_status", nullable = false, length = 20)
+    private String approvalStatus = "APPROVED";
+
     @Column(name = "create_date", nullable = false, updatable = false)
     private LocalDateTime createDate;
 

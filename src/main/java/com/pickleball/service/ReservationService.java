@@ -193,9 +193,9 @@ public class ReservationService {
                 }
 
                 // 3. 중복 예약 확인
-                reservationRepository.findByUsernameAndCourtIdAndGameDateAndTimeSlotAndCancelYnNot(
+                reservationRepository.findByUsernameAndCourtIdAndGameDateAndTimeSlotAndCancelYnNotAndApprovalStatus(
                                 username, request.getCourtId(), request.getGameDate(),
-                                request.getTimeSlot(), "Y")
+                                request.getTimeSlot(), "Y", "APPROVED")
                                 .ifPresent(r -> {
                                         throw new BusinessException(ErrorCode.ALREADY_RESERVED);
                                 });
@@ -227,6 +227,7 @@ public class ReservationService {
                                 .gameDate(request.getGameDate())
                                 .timeSlot(request.getTimeSlot())
                                 .reservType("0")
+                                .approvalStatus("APPROVED")
                                 .build();
                 reservationRepository.save(reservation);
 

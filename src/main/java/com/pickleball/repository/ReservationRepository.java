@@ -10,6 +10,7 @@ import jakarta.persistence.LockModeType;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
@@ -23,6 +24,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             AND r.gameDate = :gameDate
             AND r.timeSlot = :timeSlot
             AND r.cancelYn != 'Y'
+            AND r.approvalStatus = 'APPROVED'
       """)
   int countWithLock(
       @Param("courtId") Long courtId,
@@ -39,6 +41,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             AND r.gameDate = :gameDate
             AND r.timeSlot = :timeSlot
             AND r.cancelYn != 'Y'
+            AND r.approvalStatus = 'APPROVED'
           ORDER BY r.createDate ASC
       """)
   List<Reservation> findActivePlayers(
@@ -55,6 +58,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             AND r.gameDate = :gameDate
             AND r.timeSlot = :timeSlot
             AND r.cancelYn != 'Y'
+            AND r.approvalStatus = 'APPROVED'
       """)
   int countActiveReservations(
       @Param("courtId") Long courtId,
@@ -64,9 +68,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
   /**
    * 중복 예약 확인
    */
-  Optional<Reservation> findByUsernameAndCourtIdAndGameDateAndTimeSlotAndCancelYnNot(
+  Optional<Reservation> findByUsernameAndCourtIdAndGameDateAndTimeSlotAndCancelYnNotAndApprovalStatus(
       String username, Long courtId, LocalDate gameDate,
-      String timeSlot, String cancelYn);
+      String timeSlot, String cancelYn, String approvalStatus);
 
   /**
    * 내 예약 목록
@@ -76,7 +80,49 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
           JOIN FETCH r.court c
           WHERE r.username = :username
             AND r.cancelYn != 'Y'
+            AND r.approvalStatus = 'APPROVED'
           ORDER BY r.gameDate DESC, r.timeSlot DESC
       """)
   List<Reservation> findMyReservations(@Param("username") String username);
+
+    @Query("""
+           SELECT r FROM Reservation r
+           JOIN FETCH r.account a
+           WHERE r.courtId = :courtId
+             AND r.gameDate = :gameDate
+             AND r.cancelYn != 'Y'
+             AND r.reservType = '1'
+             AND r.approvalStatus IN :statuses
+           ORDER BY r.createDate ASC
+       """)
+   List<Reservation> findRentalRequests(
+       @Param("courtId") Long courtId,
+       @Param("gameDate") LocalDate gameDate,
+       @Param("statuses") List<String> statuses);
+
+  @Query("""
+          SELECT r FROM Reservation r
+          WHERE r.username = :username
+            AND r.cancelYn != 'Y'
+            AND r.reservType = '1'
+          ORDER BY r.createDate DESC
+      """)
+  List<Reservation> findMyRentalRequests(@Param("username") String username);
+
+  @Query("""
+          SELECT r FROM Reservation r
+          WHERE r.username = :username
+            AND r.courtId = :courtId
+            AND r.gameDate = :gameDate
+            AND r.timeSlot = :timeSlot
+            AND r.cancelYn != 'Y'
+            AND r.reservType = '1'
+            AND r.approvalStatus IN :statuses
+      """)
+  Optional<Reservation> findExistingRentalRequest(
+      @Param("username") String username,
+      @Param("courtId") Long courtId,
+      @Param("gameDate") LocalDate gameDate,
+      @Param("timeSlot") String timeSlot,
+      @Param("statuses") Set<String> statuses);
 }

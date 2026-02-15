@@ -70,6 +70,10 @@ public class AuthService {
                         throw new BusinessException(ErrorCode.USERNAME_EXISTS);
                 }
 
+                if (!Boolean.TRUE.equals(request.getAgreeService()) || !Boolean.TRUE.equals(request.getAgreePrivacy())) {
+                        throw new BusinessException(ErrorCode.TERMS_REQUIRED);
+                }
+
                 // 1. Account 생성
                 Account account = Account.builder()
                                 .username(request.getUsername())
@@ -94,6 +98,10 @@ public class AuthService {
                                 .duprPoint(request.getDuprPoint())
                                 .memberLevel("정회원")
                                 .registDate(LocalDate.now())
+                                .agreeServiceYn(Boolean.TRUE.equals(request.getAgreeService()) ? "Y" : "N")
+                                .agreePrivacyYn(Boolean.TRUE.equals(request.getAgreePrivacy()) ? "Y" : "N")
+                                .agreeMarketingYn(Boolean.TRUE.equals(request.getAgreeMarketing()) ? "Y" : "N")
+                                .agreeAllYn(Boolean.TRUE.equals(request.getAgreeAll()) ? "Y" : "N")
                                 .build();
                 memberRepository.save(member);
 
@@ -113,6 +121,10 @@ public class AuthService {
         public AuthDto.TokenResponse signupPartner(AuthDto.PartnerSignupRequest request) {
                 if (accountRepository.existsByUsername(request.getUsername())) {
                         throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+                }
+
+                if (!Boolean.TRUE.equals(request.getAgreeService()) || !Boolean.TRUE.equals(request.getAgreePrivacy())) {
+                        throw new BusinessException(ErrorCode.TERMS_REQUIRED);
                 }
 
                 // 1. Account 생성
@@ -136,6 +148,10 @@ public class AuthService {
                                 .partnerBank(request.getPartnerBank())
                                 .howToPay(request.getHowToPay())
                                 .registDate(LocalDate.now())
+                                .agreeServiceYn(Boolean.TRUE.equals(request.getAgreeService()) ? "Y" : "N")
+                                .agreePrivacyYn(Boolean.TRUE.equals(request.getAgreePrivacy()) ? "Y" : "N")
+                                .agreeMarketingYn(Boolean.TRUE.equals(request.getAgreeMarketing()) ? "Y" : "N")
+                                .agreeAllYn(Boolean.TRUE.equals(request.getAgreeAll()) ? "Y" : "N")
                                 .build();
                 partnerRepository.save(partner);
 

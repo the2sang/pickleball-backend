@@ -39,6 +39,10 @@ public class CourtSchedule {
     @Column(name = "schedule_type", nullable = false, length = 20)
     private String scheduleType;
 
+    @Builder.Default
+    @Column(name = "locked_yn", nullable = false, length = 1)
+    private String lockedYn = "N";
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "court_id", insertable = false, updatable = false)

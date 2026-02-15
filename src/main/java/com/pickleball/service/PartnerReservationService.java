@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -62,18 +63,21 @@ public class PartnerReservationService {
 
         validateNoOverlap(request.getTimeSlots());
 
+        List<CourtSchedule> lockedSchedules = courtScheduleRepository.findLockedSchedules(request.getCourtId(), request.getDate());
+        List<PartnerReservationDto.TimeSlotSetting> filteredSlots = removeOverlapWithLocked(request.getTimeSlots(), lockedSchedules);
+
         // 기존 설정 삭제 (해당 날짜의 모든 스케줄) -> 또는 업데이트 로직
         // 여기서는 간단하게 해당 날짜의 스케줄을 삭제하고 새로 등록하는 방식 사용
         courtScheduleRepository.deleteByCourtIdAndGameDate(request.getCourtId(), request.getDate());
         courtScheduleRepository.flush();
 
-        for (PartnerReservationDto.TimeSlotSetting slot : request.getTimeSlots()) {
+        for (PartnerReservationDto.TimeSlotSetting slot : filteredSlots) {
             CourtSchedule schedule = CourtSchedule.builder()
                     .courtId(request.getCourtId())
                     .gameDate(request.getDate())
                     .startTime(LocalTime.parse(slot.getStartTime()))
                     .endTime(LocalTime.parse(slot.getEndTime()))
-                    .scheduleType(slot.getType())
+                    .scheduleType("OPEN_GAME")
                     .build();
             courtScheduleRepository.save(schedule);
         }
@@ -101,6 +105,41 @@ public class PartnerReservationService {
         }
     }
 
+    private List<PartnerReservationDto.TimeSlotSetting> removeOverlapWithLocked(
+            List<PartnerReservationDto.TimeSlotSetting> timeSlots,
+            List<CourtSchedule> lockedSchedules) {
+        if (timeSlots == null || timeSlots.isEmpty()) {
+            return List.of();
+        }
+        if (lockedSchedules == null || lockedSchedules.isEmpty()) {
+            return timeSlots;
+        }
+
+        List<TimeSlotRange> locked = lockedSchedules.stream()
+                .map(s -> toRange(s.getStartTime(), s.getEndTime()))
+                .toList();
+
+        List<PartnerReservationDto.TimeSlotSetting> result = new ArrayList<>();
+
+        for (PartnerReservationDto.TimeSlotSetting slot : timeSlots) {
+            TimeSlotRange r = toRange(slot);
+
+            boolean overlapped = false;
+            for (TimeSlotRange l : locked) {
+                if (r.startMinute < l.endMinute && r.endMinute > l.startMinute) {
+                    overlapped = true;
+                    break;
+                }
+            }
+
+            if (!overlapped) {
+                result.add(slot);
+            }
+        }
+
+        return result;
+    }
+
     private void validateSlotBoundary(PartnerReservationDto.TimeSlotSetting slot) {
         toRange(slot);
     }
@@ -118,6 +157,15 @@ public class PartnerReservationService {
         if (startMinute >= endMinute) {
             throw new BusinessException(BusinessException.ErrorCode.INVALID_TIME_SLOT);
         }
+
+        return new TimeSlotRange(startMinute, endMinute);
+    }
+
+    private TimeSlotRange toRange(LocalTime startTime, LocalTime endTime) {
+        int startMinute = toMinute(startTime);
+        int endMinute = (endTime != null && endTime.equals(LocalTime.MIDNIGHT) && startMinute > 0)
+                ? 1440
+                : toMinute(endTime);
 
         return new TimeSlotRange(startMinute, endMinute);
     }
