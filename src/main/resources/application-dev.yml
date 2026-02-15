@@ -3,7 +3,7 @@
 # ================================
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pickleball_db
+    url: jdbc:postgresql://localhost:5432/postgres
     username: ${DB_USERNAME:pickleball}
     password: ${DB_PASSWORD:pickleball123}
 
