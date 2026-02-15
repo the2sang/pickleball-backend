@@ -2,6 +2,8 @@ package com.pickleball.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -86,6 +88,25 @@ public class AuthDto {
         private Boolean agreeMarketing;
 
         private Boolean agreeAll;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UsernameCheckRequest {
+        @NotBlank(message = "아이디를 입력해주세요")
+        @Size(min = 4, max = 20, message = "아이디는 4자 이상 20자 이하여야 합니다")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "아이디는 영문/숫자/언더스코어(_)만 사용할 수 있습니다")
+        private String username;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UsernameCheckResponse {
+        private boolean available;
+        private String message;
     }
 
     @Data

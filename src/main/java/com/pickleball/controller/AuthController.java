@@ -5,14 +5,27 @@ import com.pickleball.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Validated
 public class AuthController {
 
     private final AuthService authService;
+
+    /**
+     * 로그인 ID 중복 체크
+     * GET /api/v1/auth/username/check?username=...
+     */
+    @GetMapping("/username/check")
+    public ResponseEntity<AuthDto.UsernameCheckResponse> checkUsername(
+            @Valid @ModelAttribute AuthDto.UsernameCheckRequest request) {
+        return ResponseEntity.ok(authService.checkUsername(request));
+    }
 
     /**
      * 로그인 - JWT 토큰 발급

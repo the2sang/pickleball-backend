@@ -36,6 +36,22 @@ public class AuthService {
         private final JwtTokenProvider jwtTokenProvider;
         private final PasswordEncoder passwordEncoder;
 
+        @Transactional(readOnly = true)
+        public AuthDto.UsernameCheckResponse checkUsername(AuthDto.UsernameCheckRequest request) {
+                boolean exists = accountRepository.existsByUsername(request.getUsername());
+                if (exists) {
+                        return AuthDto.UsernameCheckResponse.builder()
+                                        .available(false)
+                                        .message("이미 사용 중인 아이디입니다")
+                                        .build();
+                }
+
+                return AuthDto.UsernameCheckResponse.builder()
+                                .available(true)
+                                .message("사용 가능한 아이디입니다")
+                                .build();
+        }
+
         public AuthDto.TokenResponse login(AuthDto.LoginRequest request) {
                 Authentication authentication = authenticationManager.authenticate(
                                 new UsernamePasswordAuthenticationToken(
