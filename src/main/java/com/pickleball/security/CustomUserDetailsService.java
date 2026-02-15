@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +32,29 @@ public class CustomUserDetailsService implements UserDetailsService {
 
                 List<MemberRole> roles = memberRoleRepository.findByUsername(username);
 
-                List<SimpleGrantedAuthority> authorities = roles.stream()
-                                .map(role -> new SimpleGrantedAuthority(role.getRoles()))
+                Set<String> grantedRoles = new LinkedHashSet<>();
+
+                for (MemberRole role : roles) {
+                    if (role != null && role.getRoles() != null) {
+                        String roleName = role.getRoles().trim();
+                        if (!roleName.isEmpty()) {
+                            String normalizedRole = roleName.startsWith("ROLE_")
+                                            ? roleName.toUpperCase(Locale.ROOT)
+                                            : "ROLE_" + roleName.toUpperCase(Locale.ROOT);
+                            grantedRoles.add(normalizedRole);
+                        }
+                    }
+                }
+
+                if (account.getAccountType() != null) {
+                    String fallbackRole = account.getAccountType().trim();
+                    if (!fallbackRole.isEmpty()) {
+                        grantedRoles.add("ROLE_" + fallbackRole.toUpperCase(Locale.ROOT));
+                    }
+                }
+
+                List<SimpleGrantedAuthority> authorities = grantedRoles.stream()
+                                .map(SimpleGrantedAuthority::new)
                                 .toList();
 
                 return User.builder()

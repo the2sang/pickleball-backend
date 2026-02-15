@@ -26,6 +26,7 @@ public class BusinessException extends RuntimeException {
         GAME_TIME_PASSED(HttpStatus.FORBIDDEN, "GAME_TIME_PASSED", "이미 지난 시간대는 예약할 수 없습니다"),
         COURT_CLOSED(HttpStatus.FORBIDDEN, "COURT_CLOSED", "예약이 마감된 코트입니다"),
         NOT_OWNER(HttpStatus.FORBIDDEN, "NOT_OWNER", "본인의 예약만 취소할 수 있습니다"),
+        RENTAL_NOT_ALLOWED(HttpStatus.FORBIDDEN, "RENTAL_NOT_ALLOWED", "일반 회원은 대관 시간대를 예약할 수 없습니다"),
 
         // 404
         COURT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURT_NOT_FOUND", "코트를 찾을 수 없습니다"),
@@ -34,7 +35,8 @@ public class BusinessException extends RuntimeException {
 
         // 409
         ALREADY_RESERVED(HttpStatus.CONFLICT, "ALREADY_RESERVED", "이미 해당 시간대에 예약이 있습니다"),
-        USERNAME_EXISTS(HttpStatus.CONFLICT, "USERNAME_EXISTS", "이미 사용 중인 아이디입니다");
+        USERNAME_EXISTS(HttpStatus.CONFLICT, "USERNAME_EXISTS", "이미 사용 중인 아이디입니다"),
+        SCHEDULE_OVERLAP(HttpStatus.CONFLICT, "SCHEDULE_OVERLAP", "시간대가 겹치는 스케줄이 있습니다");
 
         private final HttpStatus status;
         private final String code;
