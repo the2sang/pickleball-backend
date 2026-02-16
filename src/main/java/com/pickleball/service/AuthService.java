@@ -17,9 +17,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,6 +37,11 @@ public class AuthService {
         private final PartnerRepository partnerRepository;
         private final JwtTokenProvider jwtTokenProvider;
         private final PasswordEncoder passwordEncoder;
+        private final LoginFailureService loginFailureService;
+        private final LoginHelpEmailService loginHelpEmailService;
+
+        @Value("${app.security.login.failure-threshold:5}")
+        private int failureThreshold;
 
         @Transactional(readOnly = true)
         public AuthDto.UsernameCheckResponse checkUsername(AuthDto.UsernameCheckRequest request) {
@@ -53,31 +60,81 @@ public class AuthService {
         }
 
         public AuthDto.TokenResponse login(AuthDto.LoginRequest request) {
-                Authentication authentication = authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.getUsername(), request.getPassword()));
+                // If locked, do not try authentication.
+                if (loginFailureService.isLocked(request.getUsername())) {
+                        throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+                }
 
-                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                Account account = accountRepository.findByUsername(request.getUsername())
-                                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                try {
+                        Authentication authentication = authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(
+                                                        request.getUsername(), request.getPassword()));
 
-                String accessToken = jwtTokenProvider.generateToken(userDetails);
-                String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+                        // 로그인 성공 시 실패 카운트 초기화
+                        loginFailureService.reset(request.getUsername());
 
-                List<String> roles = userDetails.getAuthorities().stream()
-                                .map(a -> a.getAuthority())
-                                .toList();
+                        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                        Account account = accountRepository.findByUsername(request.getUsername())
+                                        .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-                return AuthDto.TokenResponse.builder()
-                                .accessToken(accessToken)
-                                .refreshToken(refreshToken)
-                                .tokenType("Bearer")
-                                .expiresIn(3600)
-                                .username(account.getUsername())
-                                .name(account.getName())
-                                .accountType(account.getAccountType())
-                                .roles(roles)
-                                .build();
+                        String accessToken = jwtTokenProvider.generateToken(userDetails);
+                        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+                        List<String> roles = userDetails.getAuthorities().stream()
+                                        .map(a -> a.getAuthority())
+                                        .toList();
+
+                        return AuthDto.TokenResponse.builder()
+                                        .accessToken(accessToken)
+                                        .refreshToken(refreshToken)
+                                        .tokenType("Bearer")
+                                        .expiresIn(3600)
+                                        .username(account.getUsername())
+                                        .name(account.getName())
+                                        .accountType(account.getAccountType())
+                                        .roles(roles)
+                                        .build();
+                } catch (BadCredentialsException e) {
+                        String username = request.getUsername();
+                        int failCount = loginFailureService.recordFailure(username);
+
+                        if (failCount < failureThreshold) {
+                                throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+                        }
+
+                        // Threshold 도달 시: username 존재 여부로 안내 문구 분기
+                        Account account = accountRepository.findByUsername(username).orElse(null);
+                        if (account == null) {
+                                // 보안상 실제 발송 여부와 무관하게 안내 문구는 동일하게 제공
+                                throw new BusinessException(ErrorCode.LOGIN_HELP_SENT_FORGOT_ID);
+                        }
+
+                        String email = resolveAccountEmail(account);
+                        if (failCount == failureThreshold && email != null && !email.isBlank()) {
+                                loginHelpEmailService.sendLoginFailureNotice(email, account.getUsername());
+                                loginFailureService.markNotified(username);
+                        }
+
+                        throw new BusinessException(ErrorCode.LOGIN_HELP_SENT_PASSWORD);
+                }
+        }
+
+        private String resolveAccountEmail(Account account) {
+                if (account == null) {
+                        return null;
+                }
+
+                String type = account.getAccountType() == null ? "" : account.getAccountType().trim().toUpperCase();
+                if ("PARTNER".equals(type)) {
+                        return partnerRepository.findByAccountId(account.getId())
+                                        .map(p -> p.getPartnerEmail())
+                                        .orElse(null);
+                }
+
+                // MEMBER or others
+                return memberRepository.findByAccountId(account.getId())
+                                .map(m -> m.getEmail())
+                                .orElse(null);
         }
 
         @Transactional

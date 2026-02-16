@@ -15,6 +15,14 @@ public class BusinessException extends RuntimeException {
 
     @Getter
     public enum ErrorCode {
+        // 401
+        INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "아이디 또는 비밀번호가 올바르지 않습니다"),
+        LOGIN_HELP_SENT_FORGOT_ID(HttpStatus.UNAUTHORIZED, "LOGIN_HELP_SENT_FORGOT_ID", "로그인 실패가 5회 누적되었습니다. 등록된 메일 계정으로 아이디 정보를 발송했습니다"),
+        LOGIN_HELP_SENT_PASSWORD(HttpStatus.UNAUTHORIZED, "LOGIN_HELP_SENT_PASSWORD", "비밀번호가 5회 일치하지 않습니다. 계정이 10분간 잠금 처리되었으며 등록된 메일 계정으로 안내를 발송했습니다"),
+
+        // 423
+        ACCOUNT_LOCKED(HttpStatus.LOCKED, "ACCOUNT_LOCKED", "로그인 실패가 누적되어 계정이 잠금되었습니다. 10분 후 다시 시도해주세요"),
+
         // 400
         COURT_FULL(HttpStatus.BAD_REQUEST, "COURT_FULL", "해당 시간대 정원이 마감되었습니다"),
         INVALID_TIME_SLOT(HttpStatus.BAD_REQUEST, "INVALID_TIME_SLOT", "유효하지 않은 시간대입니다"),
