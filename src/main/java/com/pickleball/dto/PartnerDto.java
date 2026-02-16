@@ -12,6 +12,9 @@ public class PartnerDto {
         private String phoneNumber;
         private String partnerAddress;
         private long courtCount;
+        private long reservationCount;
+        private long myReservationCount;
+        private boolean favorite;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor

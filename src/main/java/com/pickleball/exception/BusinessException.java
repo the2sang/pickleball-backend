@@ -37,16 +37,19 @@ public class BusinessException extends RuntimeException {
         COURT_CLOSED(HttpStatus.FORBIDDEN, "COURT_CLOSED", "예약이 마감된 코트입니다"),
         NOT_OWNER(HttpStatus.FORBIDDEN, "NOT_OWNER", "본인의 예약만 취소할 수 있습니다"),
         RENTAL_NOT_ALLOWED(HttpStatus.FORBIDDEN, "RENTAL_NOT_ALLOWED", "일반 회원은 대관 시간대를 예약할 수 없습니다"),
+        FAVORITE_MEMBER_ONLY(HttpStatus.FORBIDDEN, "FAVORITE_MEMBER_ONLY", "일반 회원만 즐겨찾기를 설정할 수 있습니다"),
 
         // 404
         COURT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURT_NOT_FOUND", "코트를 찾을 수 없습니다"),
+        PARTNER_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTNER_NOT_FOUND", "사업장을 찾을 수 없습니다"),
         RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_NOT_FOUND", "예약을 찾을 수 없습니다"),
         MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "회원을 찾을 수 없습니다"),
 
         // 409
         ALREADY_RESERVED(HttpStatus.CONFLICT, "ALREADY_RESERVED", "이미 해당 시간대에 예약이 있습니다"),
         USERNAME_EXISTS(HttpStatus.CONFLICT, "USERNAME_EXISTS", "이미 사용 중인 아이디입니다"),
-        SCHEDULE_OVERLAP(HttpStatus.CONFLICT, "SCHEDULE_OVERLAP", "시간대가 겹치는 스케줄이 있습니다");
+        SCHEDULE_OVERLAP(HttpStatus.CONFLICT, "SCHEDULE_OVERLAP", "시간대가 겹치는 스케줄이 있습니다"),
+        FAVORITE_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "FAVORITE_LIMIT_EXCEEDED", "즐겨찾기는 최대 6개까지 설정할 수 있습니다");
 
         private final HttpStatus status;
         private final String code;
