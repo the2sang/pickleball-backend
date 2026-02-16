@@ -15,10 +15,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 @Slf4j
 @Service
@@ -35,30 +34,25 @@ public class ReservationService {
         /**
          * 코트별 시간대 예약 현황 조회
          */
-        @Transactional(readOnly = true)
-        public ReservationDto.CourtSlotResponse getCourtSlots(Long courtId, LocalDate gameDate) {
-                Court court = courtRepository.findById(courtId)
-                                .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
+    @Transactional(readOnly = true)
+    public ReservationDto.CourtSlotResponse getCourtSlots(Long courtId, LocalDate gameDate) {
+        Court court = courtRepository.findById(courtId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
 
                 List<CourtSchedule> schedules = courtScheduleRepository
                                 .findByCourtIdAndGameDateOrderByStartTime(courtId, gameDate);
 
-                List<ReservationRepositoryCustom.ActivePlayerRow> allRows = reservationRepository
-                                .findActivePlayerRows(courtId, gameDate);
-
-                Map<String, List<ReservationRepositoryCustom.ActivePlayerRow>> rowsBySlot = allRows.stream()
-                                .collect(Collectors.groupingBy(
-                                                ReservationRepositoryCustom.ActivePlayerRow::timeSlot,
-                                                LinkedHashMap::new,
-                                                Collectors.toList()));
+        List<ReservationRepositoryCustom.ActivePlayerRow> allRows = reservationRepository
+                .findActivePlayerRows(courtId, gameDate);
 
                 List<ReservationDto.SlotInfo> slots = schedules.stream()
                                 .map(schedule -> {
                                         String timeSlot = formatTimeSlot(schedule.getStartTime(),
                                                         schedule.getEndTime());
 
-                                        List<ReservationRepositoryCustom.ActivePlayerRow> rows = rowsBySlot
-                                                        .getOrDefault(timeSlot, List.of());
+                                        List<ReservationRepositoryCustom.ActivePlayerRow> rows = allRows.stream()
+                                                .filter(row -> isSlotMatch(row.timeSlot(), schedule))
+                                                .toList();
 
                                         int count = rows.size();
                                         int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber()
@@ -134,8 +128,15 @@ public class ReservationService {
                                 .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
                 int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6;
 
-                List<ReservationRepositoryCustom.ActivePlayerRow> rows = reservationRepository
-                                .findActivePlayerRows(courtId, gameDate, timeSlot);
+                List<String> timeSlotCandidates = buildTimeSlotCandidates(timeSlot);
+                List<ReservationRepositoryCustom.ActivePlayerRow> rows = List.of();
+
+                for (String candidate : timeSlotCandidates) {
+                        rows = reservationRepository.findActivePlayerRows(courtId, gameDate, candidate);
+                        if (!rows.isEmpty()) {
+                                break;
+                        }
+                }
 
                 List<ReservationDto.PlayerInfo> players = new ArrayList<>();
                 for (int i = 0; i < rows.size(); i++) {
@@ -309,6 +310,114 @@ public class ReservationService {
                 String startTime = timeSlot.split("~")[0].trim();
                 return LocalDateTime.of(gameDate,
                                 parseTime(startTime));
+        }
+
+        private boolean isSlotMatch(String sourceTimeSlot, CourtSchedule schedule) {
+                if (sourceTimeSlot == null || schedule == null) {
+                        return false;
+                }
+
+                String[] split = sourceTimeSlot.split("~");
+                if (split.length != 2) {
+                        return false;
+                }
+
+                int sourceStart = parseSlotMinute(split[0], false);
+                int sourceEnd = parseSlotMinute(split[1], true);
+                int scheduleStart = parseSlotMinute(
+                                schedule.getStartTime(),
+                                false);
+                int scheduleEnd = parseSlotMinute(
+                                schedule.getEndTime(),
+                                true);
+
+                if (sourceStart < 0 || sourceEnd < 0 || scheduleStart < 0 || scheduleEnd < 0) {
+                        return false;
+                }
+
+                return sourceStart == scheduleStart && sourceEnd == scheduleEnd;
+        }
+
+        private int parseSlotMinute(LocalTime time, boolean isEndTime) {
+                if (time == null) {
+                        return -1;
+                }
+                if (time.getHour() == 0 && time.getMinute() == 0 && isEndTime) {
+                        return 1440;
+                }
+                return time.getHour() * 60 + time.getMinute();
+        }
+
+        private int parseSlotMinute(String raw, boolean isEndTime) {
+                if (raw == null) {
+                        return -1;
+                }
+                String normalized = raw.trim();
+                if (normalized.isEmpty()) {
+                        return -1;
+                }
+                if ("24:00".equals(normalized)) {
+                        return 1440;
+                }
+                if ("00:00".equals(normalized)) {
+                        return isEndTime ? 1440 : 0;
+                }
+                try {
+                        LocalTime time = parseTime(normalized);
+                        return time.getHour() * 60 + time.getMinute();
+                } catch (Exception e) {
+                        return -1;
+                }
+        }
+
+        private String normalizeTimeSlotForQuery(String timeSlot) {
+                if (timeSlot == null) {
+                        return "";
+                }
+
+                String normalized = String.valueOf(timeSlot).trim();
+                String[] split = normalized.split("~");
+                if (split.length != 2) {
+                        return normalized.replace(" ", "");
+                }
+
+                int start = parseSlotMinute(split[0], false);
+                int end = parseSlotMinute(split[1], true);
+                if (start < 0 || end < 0) {
+                        return normalized.replace(" ", "");
+                }
+
+                return formatSlotMinute(start) + "~" + formatSlotMinute(end);
+        }
+
+        private List<String> buildTimeSlotCandidates(String timeSlot) {
+                Set<String> candidates = new LinkedHashSet<>();
+                if (timeSlot == null) {
+                        candidates.add("");
+                        return new ArrayList<>(candidates);
+                }
+
+                String trimmed = String.valueOf(timeSlot).trim();
+                if (!trimmed.isEmpty()) {
+                        candidates.add(trimmed);
+                        candidates.add(trimmed.replace(" ", ""));
+                }
+
+                String normalized = normalizeTimeSlotForQuery(trimmed);
+                if (!normalized.isEmpty()) {
+                        candidates.add(normalized);
+                }
+
+                return new ArrayList<>(candidates);
+        }
+
+        private String formatSlotMinute(int minute) {
+                if (minute == 1440) {
+                        return "24:00";
+                }
+                int h = minute / 60;
+                int m = minute % 60;
+                return String.format("%02d:%02d", h, m);
         }
 
         private LocalTime[] parseTimeSlotRange(String timeSlot) {
