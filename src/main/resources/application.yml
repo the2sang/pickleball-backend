@@ -42,11 +42,13 @@ spring:
           starttls:
             enable: ${SMTP_STARTTLS:true}
             required: ${SMTP_STARTTLS_REQUIRED:false}
+          ssl:
+            enable: ${SMTP_SSL_ENABLE:false}
+            required: ${SMTP_SSL_REQUIRED:false}
+            trust: ${SMTP_SSL_TRUST:}
           connectiontimeout: ${SMTP_CONNECTION_TIMEOUT_MS:5000}
           timeout: ${SMTP_TIMEOUT_MS:5000}
           writetimeout: ${SMTP_WRITE_TIMEOUT_MS:5000}
-          ssl:
-            trust: ${SMTP_SSL_TRUST:}
         debug: ${SMTP_DEBUG:false}
 
 app:
@@ -75,3 +77,8 @@ springdoc:
   api-docs:
     path: /v3/api-docs
   show-actuator: true
+
+management:
+  health:
+    mail:
+      enabled: ${MAIL_HEALTH_ENABLED:true}
