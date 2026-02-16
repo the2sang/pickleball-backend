@@ -29,11 +29,11 @@ spring:
     locations: classpath:db/migration
 
   mail:
-    host: ${SMTP_HOST:}
+    host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
     protocol: ${SMTP_PROTOCOL:smtp}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
+    username: ${SMTP_USERNAME:the2sang@gmail.com}
+    password: ${SMTP_PASSWORD:alswl1!A314}
     default-encoding: UTF-8
     properties:
       mail:
