@@ -12,6 +12,19 @@ spring:
       ddl-auto: none
     show-sql: false
 
+  # Mail (prod)
+  # Configure these via environment variables.
+  # Required: SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, MAIL_FROM
+  mail:
+    properties:
+      mail:
+        debug: false
+
+app:
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@lesgo-pickle.local}
+
 # Logging - minimal for production
 logging:
   level:

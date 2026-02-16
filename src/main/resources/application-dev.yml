@@ -12,6 +12,19 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  # Mail (dev)
+  # - Default is disabled. Enable with MAIL_ENABLED=true
+  # - Configure SMTP via env vars: SMTP_HOST/SMTP_PORT/SMTP_USERNAME/SMTP_PASSWORD
+  mail:
+    properties:
+      mail:
+        debug: true
+
+app:
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@lesgo-pickle.local}
+
 # Logging - verbose for development
 logging:
   level:
