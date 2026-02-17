@@ -22,7 +22,7 @@ spring:
 
 app:
   mail:
-    enabled: ${MAIL_ENABLED:false}
+    enabled: ${MAIL_ENABLED:true}
     from: ${MAIL_FROM:no-reply@lesgo-pickle.local}
 
 # Logging - verbose for development
