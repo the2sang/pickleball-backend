@@ -5,6 +5,7 @@ import com.pickleball.dto.PartnerDto;
 import com.pickleball.service.PartnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,8 +25,22 @@ public class PartnerController {
     public ResponseEntity<PartnerDto.PageResponse<PartnerDto.Response>> getPartners(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(partnerService.getPartners(keyword, page, size));
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : null;
+        return ResponseEntity.ok(partnerService.getPartners(keyword, page, size, username));
+    }
+
+    @PostMapping("/{id}/favorites")
+    public ResponseEntity<Void> addFavoritePartner(@PathVariable Long id, Authentication authentication) {
+        partnerService.addFavoritePartner(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/favorites")
+    public ResponseEntity<Void> removeFavoritePartner(@PathVariable Long id, Authentication authentication) {
+        partnerService.removeFavoritePartner(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
     }
 
     /**

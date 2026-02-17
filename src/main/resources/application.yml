@@ -5,7 +5,7 @@ spring:
   application:
     name: pickleball-reservation-api
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:prod}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -29,11 +29,11 @@ spring:
     locations: classpath:db/migration
 
   mail:
-    host: ${SMTP_HOST:}
+    host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
     protocol: ${SMTP_PROTOCOL:smtp}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
+    username: ${SMTP_USERNAME:the2sang@gmail.com}
+    password: ${SMTP_PASSWORD:qtbk zaxh lvaz lvga}
     default-encoding: UTF-8
     properties:
       mail:
@@ -63,8 +63,8 @@ app:
 # JWT Configuration
   jwt:
     secret: ${JWT_SECRET:dGhpc0lzQVZlcnlMb25nU2VjcmV0S2V5Rm9yUGlja2xlYmFsbEFwaUF0TGVhc3QzMkJ5dGVz}
-    expiration-ms: 7200000
-    refresh-expiration-ms: 31536000000
+    expiration-ms: 3600000
+    refresh-expiration-ms: 2592000000
 
 # Springdoc
 springdoc:

@@ -76,3 +76,10 @@ tasks.named('test') {
 tasks.named('bootRun') {
     systemProperty 'spring.profiles.active', 'dev'
 }
+
+tasks.register('mailTestApp', JavaExec) {
+    group = 'verification'
+    description = 'Runs profile-based mail smoke test app from test sources'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.pickleball.MailProfileTestApplication'
+}

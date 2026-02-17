@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -60,22 +61,27 @@ public class AuthService {
         }
 
         public AuthDto.TokenResponse login(AuthDto.LoginRequest request) {
+                String username = normalize(request.getUsername());
+
                 // If locked, do not try authentication.
-                if (loginFailureService.isLocked(request.getUsername())) {
+                if (loginFailureService.isLocked(username)) {
                         throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
+                }
+
+                Account account = accountRepository.findByUsername(username).orElse(null);
+                if (account == null) {
+                        throw new BusinessException(ErrorCode.USERNAME_NOT_REGISTERED);
                 }
 
                 try {
                         Authentication authentication = authenticationManager.authenticate(
                                         new UsernamePasswordAuthenticationToken(
-                                                        request.getUsername(), request.getPassword()));
+                                                        username, request.getPassword()));
 
                         // 로그인 성공 시 실패 카운트 초기화
-                        loginFailureService.reset(request.getUsername());
+                        loginFailureService.reset(username);
 
                         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                        Account account = accountRepository.findByUsername(request.getUsername())
-                                        .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
                         String accessToken = jwtTokenProvider.generateToken(userDetails);
                         String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
@@ -95,18 +101,10 @@ public class AuthService {
                                         .roles(roles)
                                         .build();
                 } catch (BadCredentialsException e) {
-                        String username = request.getUsername();
                         int failCount = loginFailureService.recordFailure(username);
 
                         if (failCount < failureThreshold) {
                                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
-                        }
-
-                        // Threshold 도달 시: username 존재 여부로 안내 문구 분기
-                        Account account = accountRepository.findByUsername(username).orElse(null);
-                        if (account == null) {
-                                // 보안상 실제 발송 여부와 무관하게 안내 문구는 동일하게 제공
-                                throw new BusinessException(ErrorCode.LOGIN_HELP_SENT_FORGOT_ID);
                         }
 
                         String email = resolveAccountEmail(account);
@@ -119,22 +117,119 @@ public class AuthService {
                 }
         }
 
+        @Transactional
+        public AuthDto.MessageResponse findId(AuthDto.FindIdRequest request) {
+                String email = normalizeEmail(request.getEmail());
+                if (email == null) {
+                        throw new BusinessException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+                }
+
+                String username = memberRepository.findByEmailIgnoreCase(email)
+                                .map(member -> accountRepository.findById(member.getAccountId()).orElse(null))
+                                .map(Account::getUsername)
+                                .orElseGet(() -> partnerRepository.findByPartnerEmailIgnoreCase(email)
+                                                .map(partner -> accountRepository.findById(partner.getAccountId()).orElse(null))
+                                                .map(Account::getUsername)
+                                                .orElse(null));
+
+                if (username == null || username.isBlank()) {
+                        throw new BusinessException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+                }
+
+                loginHelpEmailService.sendFindIdEmail(email, username);
+                return AuthDto.MessageResponse.builder()
+                                .code("FIND_ID_MAIL_SENT")
+                                .message("등록된 이메일로 아이디 안내 메일을 발송했습니다.")
+                                .build();
+        }
+
+        @Transactional
+        public AuthDto.MessageResponse resetPassword(AuthDto.ResetPasswordRequest request) {
+                String username = normalize(request.getUsername());
+                String email = normalizeEmail(request.getEmail());
+
+                Account account = accountRepository.findByUsername(username)
+                                .orElseThrow(() -> new BusinessException(ErrorCode.USERNAME_NOT_REGISTERED));
+
+                if (email == null) {
+                        throw new BusinessException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+                }
+
+                int failCount = loginFailureService.getFailCount(username);
+                if (failCount < failureThreshold) {
+                        throw new BusinessException(ErrorCode.PASSWORD_RESET_NOT_ALLOWED);
+                }
+
+                String registeredEmail = normalizeEmail(resolveAccountEmail(account));
+                if (registeredEmail == null || !registeredEmail.equalsIgnoreCase(email)) {
+                        throw new BusinessException(ErrorCode.REGISTERED_EMAIL_MISMATCH);
+                }
+
+                String temporaryPassword = generateTemporaryPassword(6);
+                account.setPassword(passwordEncoder.encode(temporaryPassword));
+                accountRepository.save(account);
+                loginFailureService.reset(username);
+                loginHelpEmailService.sendPasswordResetEmail(email, username, temporaryPassword);
+
+                return AuthDto.MessageResponse.builder()
+                                .code("PASSWORD_RESET_MAIL_SENT")
+                                .message("등록된 이메일로 초기화된 비밀번호를 발송했습니다.")
+                                .build();
+        }
+
         private String resolveAccountEmail(Account account) {
                 if (account == null) {
                         return null;
                 }
 
-                String type = account.getAccountType() == null ? "" : account.getAccountType().trim().toUpperCase();
-                if ("PARTNER".equals(type)) {
-                        return partnerRepository.findByAccountId(account.getId())
-                                        .map(p -> p.getPartnerEmail())
-                                        .orElse(null);
+                // account_type 값 불일치/누락 데이터가 있어도 조회되도록 양쪽을 모두 확인
+                String partnerEmail = partnerRepository.findByAccountId(account.getId())
+                                .map(Partner::getPartnerEmail)
+                                .orElse(null);
+                if (partnerEmail != null && !partnerEmail.isBlank()) {
+                        return partnerEmail;
                 }
 
-                // MEMBER or others
                 return memberRepository.findByAccountId(account.getId())
-                                .map(m -> m.getEmail())
+                                .map(Member::getEmail)
                                 .orElse(null);
+        }
+
+        private String normalize(String username) {
+                return username == null ? "" : username.trim();
+        }
+
+        private String normalizeEmail(String email) {
+                if (email == null) {
+                        return null;
+                }
+                String value = email.trim();
+                return value.isBlank() ? null : value.toLowerCase();
+        }
+
+        private String generateTemporaryPassword(int length) {
+                final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                final String lower = "abcdefghijklmnopqrstuvwxyz";
+                final String digits = "0123456789";
+                final String all = upper + lower + digits;
+                SecureRandom random = new SecureRandom();
+
+                char[] password = new char[length];
+                password[0] = upper.charAt(random.nextInt(upper.length()));
+                password[1] = lower.charAt(random.nextInt(lower.length()));
+                password[2] = digits.charAt(random.nextInt(digits.length()));
+                for (int i = 3; i < length; i++) {
+                        password[i] = all.charAt(random.nextInt(all.length()));
+                }
+
+                for (int i = password.length - 1; i > 0; i--) {
+                        int j = random.nextInt(i + 1);
+                        char tmp = password[i];
+                        password[i] = password[j];
+                        password[j] = tmp;
+                }
+
+                return new String(password);
         }
 
         @Transactional

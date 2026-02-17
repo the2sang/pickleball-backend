@@ -56,4 +56,24 @@ public class AuthController {
             @Valid @RequestBody AuthDto.PartnerSignupRequest request) {
         return ResponseEntity.status(201).body(authService.signupPartner(request));
     }
+
+    /**
+     * 아이디 찾기 안내 메일 발송
+     * POST /api/v1/auth/find-id
+     */
+    @PostMapping("/find-id")
+    public ResponseEntity<AuthDto.MessageResponse> findId(
+            @Valid @RequestBody AuthDto.FindIdRequest request) {
+        return ResponseEntity.ok(authService.findId(request));
+    }
+
+    /**
+     * 비밀번호 초기화 메일 발송
+     * POST /api/v1/auth/reset-password
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthDto.MessageResponse> resetPassword(
+            @Valid @RequestBody AuthDto.ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
+    }
 }

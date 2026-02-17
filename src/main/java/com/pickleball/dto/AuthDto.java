@@ -123,4 +123,31 @@ public class AuthDto {
         private String accountType;
         private List<String> roles;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FindIdRequest {
+        @NotBlank(message = "이메일을 입력해주세요")
+        private String email;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ResetPasswordRequest {
+        @NotBlank(message = "아이디를 입력해주세요")
+        private String username;
+        @NotBlank(message = "이메일을 입력해주세요")
+        private String email;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MessageResponse {
+        private String code;
+        private String message;
+    }
 }
