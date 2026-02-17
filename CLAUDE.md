@@ -71,6 +71,10 @@ Core entities and relationships:
 - **Role-restricted:** `/api/v1/admin/**` (ROLE_ADMIN), `/api/v1/partner-manage/**` (ROLE_PARTNER)
 - **All other endpoints** require authentication (Bearer token)
 - CORS allows `localhost:3000` and `localhost:5173`
+- CORS origin patterns can be overridden via environment variable `APP_CORS_ALLOWED_ORIGIN_PATTERNS`.
+  - 값은 쉼표(`,`)로 구분된 패턴 목록입니다.
+  - 예: `https://pickleball-front.vercel.app,https://www.pickleball-front.vercel.app`
+  - 운영에서는 Railway 환경변수에 위 값을 등록하고, 앱 재시작 후 반영됩니다.
 - Stateless sessions, CSRF disabled
 
 ## Conventions
