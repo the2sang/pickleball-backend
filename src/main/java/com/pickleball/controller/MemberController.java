@@ -34,4 +34,16 @@ public class MemberController {
             @Valid @RequestBody MemberDto.ProfileUpdateRequest request) {
         return ResponseEntity.ok(memberService.updateProfile(authentication.getName(), request));
     }
+
+    /**
+     * 본인 비밀번호 변경
+     * PUT /api/v1/members/me/password
+     */
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            Authentication authentication,
+            @Valid @RequestBody MemberDto.PasswordChangeRequest request) {
+        memberService.changePassword(authentication.getName(), request);
+        return ResponseEntity.noContent().build();
+    }
 }

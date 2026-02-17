@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface PartnerRepository extends JpaRepository<Partner, Long> {
 
   Optional<Partner> findByAccountId(Long accountId);
+  Optional<Partner> findByPartnerEmailIgnoreCase(String partnerEmail);
 
   @Query("""
            SELECT p FROM Partner p

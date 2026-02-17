@@ -72,6 +72,13 @@ public class LoginFailureService {
         return loginFailureRepository.findById(normalize(username));
     }
 
+    @Transactional(readOnly = true)
+    public int getFailCount(String username) {
+        return loginFailureRepository.findById(normalize(username))
+                .map(LoginFailure::getFailCount)
+                .orElse(0);
+    }
+
     @Transactional
     public void markNotified(String username) {
         loginFailureRepository.findById(normalize(username)).ifPresent(entity -> {

@@ -8,6 +8,7 @@ import com.pickleball.exception.BusinessException.ErrorCode;
 import com.pickleball.repository.AccountRepository;
 import com.pickleball.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ public class MemberService {
 
     private final AccountRepository accountRepository;
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 본인 프로필 조회
@@ -59,6 +61,38 @@ public class MemberService {
         memberRepository.save(member);
 
         return toProfileResponse(account, member);
+    }
+
+    @Transactional
+    public void changePassword(String username, MemberDto.PasswordChangeRequest request) {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), account.getPassword())) {
+            throw new BusinessException(ErrorCode.CURRENT_PASSWORD_INVALID);
+        }
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BusinessException(ErrorCode.NEW_PASSWORD_CONFIRM_MISMATCH);
+        }
+        if (!isValidPassword(request.getNewPassword())) {
+            throw new BusinessException(ErrorCode.NEW_PASSWORD_RULE_INVALID);
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), account.getPassword())) {
+            throw new BusinessException(ErrorCode.SAME_AS_OLD_PASSWORD);
+        }
+
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        accountRepository.save(account);
+    }
+
+    private boolean isValidPassword(String raw) {
+        if (raw == null || raw.length() < 8) {
+            return false;
+        }
+        boolean hasLetter = raw.matches(".*[A-Za-z].*");
+        boolean hasDigit = raw.matches(".*\\d.*");
+        boolean hasSpecial = raw.matches(".*[^A-Za-z0-9].*");
+        return hasLetter && hasDigit && hasSpecial;
     }
 
     private MemberDto.ProfileResponse toProfileResponse(Account account, Member member) {

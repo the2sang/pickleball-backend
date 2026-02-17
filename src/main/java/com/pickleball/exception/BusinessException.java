@@ -17,6 +17,7 @@ public class BusinessException extends RuntimeException {
     public enum ErrorCode {
         // 401
         INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "아이디 또는 비밀번호가 올바르지 않습니다"),
+        USERNAME_NOT_REGISTERED(HttpStatus.UNAUTHORIZED, "USERNAME_NOT_REGISTERED", "등록된 아이디가 없으니 확인 바랍니다."),
         LOGIN_HELP_SENT_FORGOT_ID(HttpStatus.UNAUTHORIZED, "LOGIN_HELP_SENT_FORGOT_ID", "로그인 실패가 5회 누적되었습니다. 등록된 메일 계정으로 아이디 정보를 발송했습니다"),
         LOGIN_HELP_SENT_PASSWORD(HttpStatus.UNAUTHORIZED, "LOGIN_HELP_SENT_PASSWORD", "비밀번호가 5회 일치하지 않습니다. 계정이 10분간 잠금 처리되었으며 등록된 메일 계정으로 안내를 발송했습니다"),
 
@@ -28,6 +29,12 @@ public class BusinessException extends RuntimeException {
         INVALID_TIME_SLOT(HttpStatus.BAD_REQUEST, "INVALID_TIME_SLOT", "유효하지 않은 시간대입니다"),
         INVALID_REQUEST_STATE(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_STATE", "요청 상태가 올바르지 않습니다"),
         TERMS_REQUIRED(HttpStatus.BAD_REQUEST, "TERMS_REQUIRED", "필수 약관에 동의해야 가입할 수 있습니다"),
+        REGISTERED_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "REGISTERED_EMAIL_MISMATCH", "회원가입시 등록한 메일 주소와 다릅니다"),
+        PASSWORD_RESET_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_NOT_ALLOWED", "비밀번호가 5회 이상 일치하지 않은 경우에만 초기화할 수 있습니다"),
+        CURRENT_PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "CURRENT_PASSWORD_INVALID", "현재 비밀번호가 올바르지 않습니다"),
+        NEW_PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "NEW_PASSWORD_CONFIRM_MISMATCH", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다"),
+        NEW_PASSWORD_RULE_INVALID(HttpStatus.BAD_REQUEST, "NEW_PASSWORD_RULE_INVALID", "비밀번호는 영문자, 숫자, 특수문자를 포함한 8자 이상이어야 합니다"),
+        SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "SAME_AS_OLD_PASSWORD", "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
 
         // 403
         MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "MEMBER_SUSPENDED", "해당 사업장에서 정지된 회원입니다"),
