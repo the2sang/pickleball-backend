@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -91,11 +92,19 @@ public class SecurityConfig {
         // Use patterns so ephemeral dev domains (e.g. ngrok) work.
         // With allowCredentials=true, Spring will echo back the request Origin
         // when it matches an allowedOriginPattern.
-        configuration.setAllowedOriginPatterns(List.of(
+        String customOriginPatterns = System.getenv("APP_CORS_ALLOWED_ORIGIN_PATTERNS");
+        if (customOriginPatterns != null && !customOriginPatterns.isBlank()) {
+            configuration.setAllowedOriginPatterns(Arrays.asList(customOriginPatterns.split("\\s*,\\s*")));
+        } else {
+            configuration.setAllowedOriginPatterns(List.of(
+                "https://localhost",
                 "https://localhost:*",
                 "https://127.0.0.1:*",
                 "http://localhost:*",
+                "http://localhost",
                 "http://127.0.0.1:*",
+                "https://*.railway.app",
+                "https://*.up.railway.app",
                 "https://*.ngrok-free.dev",
                 "http://*.ngrok-free.dev",
                 "https://*.ngrok-free.app",
@@ -104,7 +113,8 @@ public class SecurityConfig {
                 "http://*.ngrok.io",
                 "https://*.ngrok.app",
                 "http://*.ngrok.app"
-        ));
+            ));
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
