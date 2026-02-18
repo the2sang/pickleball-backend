@@ -23,12 +23,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+        private static final String ALPHABETS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private static final String DIGITS = "0123456789";
+        private static final String ALPHA_NUM = ALPHABETS + DIGITS;
+        private static final int TEMP_PASSWORD_LENGTH = 6;
+
+        private final SecureRandom secureRandom = new SecureRandom();
 
         private final AuthenticationManager authenticationManager;
         private final AccountRepository accountRepository;
@@ -115,8 +125,35 @@ public class AuthService {
                                 loginFailureService.markNotified(username);
                         }
 
-                        throw new BusinessException(ErrorCode.LOGIN_HELP_SENT_PASSWORD);
+                throw new BusinessException(ErrorCode.LOGIN_HELP_SENT_PASSWORD);
                 }
+        }
+
+        @Transactional(readOnly = true)
+        public AuthDto.MessageResponse recoverUsername(AuthDto.UsernameRecoverRequest request) {
+                String email = normalizeEmail(request.getEmail());
+                findAccountByEmail(email).ifPresent(account ->
+                                loginHelpEmailService.sendUsernameRecovery(email, account.getUsername()));
+
+                return AuthDto.MessageResponse.builder()
+                                .message("입력하신 이메일로 아이디 안내를 발송했습니다")
+                                .build();
+        }
+
+        @Transactional
+        public AuthDto.MessageResponse resetPassword(AuthDto.PasswordResetRequest request) {
+                String email = normalizeEmail(request.getEmail());
+                findAccountByEmail(email).ifPresent(account -> {
+                        String temporaryPassword = generateTemporaryPassword();
+                        account.setPassword(passwordEncoder.encode(temporaryPassword));
+                        accountRepository.save(account);
+                        loginFailureService.reset(account.getUsername());
+                        loginHelpEmailService.sendTemporaryPassword(email, account.getUsername(), temporaryPassword);
+                });
+
+                return AuthDto.MessageResponse.builder()
+                                .message("입력하신 이메일로 임시 비밀번호를 발송했습니다")
+                                .build();
         }
 
         private String resolveAccountEmail(Account account) {
@@ -135,6 +172,41 @@ public class AuthService {
                 return memberRepository.findByAccountId(account.getId())
                                 .map(m -> m.getEmail())
                                 .orElse(null);
+        }
+
+        private Optional<Account> findAccountByEmail(String email) {
+                if (email == null || email.isBlank()) {
+                        return Optional.empty();
+                }
+
+                Optional<Account> memberAccount = memberRepository.findByEmail(email)
+                                .flatMap(member -> accountRepository.findById(member.getAccountId()));
+                if (memberAccount.isPresent()) {
+                        return memberAccount;
+                }
+
+                return partnerRepository.findByPartnerEmail(email)
+                                .flatMap(partner -> accountRepository.findById(partner.getAccountId()));
+        }
+
+        private String normalizeEmail(String email) {
+                return email == null ? "" : email.trim();
+        }
+
+        private String generateTemporaryPassword() {
+                List<Character> chars = new ArrayList<>(TEMP_PASSWORD_LENGTH);
+                chars.add(ALPHABETS.charAt(secureRandom.nextInt(ALPHABETS.length())));
+                chars.add(DIGITS.charAt(secureRandom.nextInt(DIGITS.length())));
+                for (int i = 2; i < TEMP_PASSWORD_LENGTH; i++) {
+                        chars.add(ALPHA_NUM.charAt(secureRandom.nextInt(ALPHA_NUM.length())));
+                }
+                Collections.shuffle(chars, secureRandom);
+
+                StringBuilder sb = new StringBuilder(TEMP_PASSWORD_LENGTH);
+                for (Character ch : chars) {
+                        sb.append(ch);
+                }
+                return sb.toString();
         }
 
         @Transactional

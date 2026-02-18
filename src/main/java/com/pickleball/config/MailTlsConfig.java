@@ -54,6 +54,11 @@ public class MailTlsConfig {
                     log.info("Mail TLS normalized for STARTTLS (protocol={}, port={}): disabled implicit SSL", protocol, port);
                 }
 
+                String sslTrust = props.getProperty("mail.smtp.ssl.trust", "");
+                if (host != null && !host.isBlank() && sslTrust.isBlank()) {
+                    props.setProperty("mail.smtp.ssl.trust", host);
+                }
+
                 log.info(
                         "Mail SMTP effective properties (host={}, protocol={}, port={}, starttls.enable={}, starttls.required={}, ssl.enable={}, ssl.trust={})",
                         host,

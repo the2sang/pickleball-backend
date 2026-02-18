@@ -56,4 +56,24 @@ public class AuthController {
             @Valid @RequestBody AuthDto.PartnerSignupRequest request) {
         return ResponseEntity.status(201).body(authService.signupPartner(request));
     }
+
+    /**
+     * 이메일로 아이디 찾기
+     * POST /api/v1/auth/username/recover
+     */
+    @PostMapping("/username/recover")
+    public ResponseEntity<AuthDto.MessageResponse> recoverUsername(
+            @Valid @RequestBody AuthDto.UsernameRecoverRequest request) {
+        return ResponseEntity.ok(authService.recoverUsername(request));
+    }
+
+    /**
+     * 이메일로 임시 비밀번호 발급
+     * POST /api/v1/auth/password/reset
+     */
+    @PostMapping("/password/reset")
+    public ResponseEntity<AuthDto.MessageResponse> resetPassword(
+            @Valid @RequestBody AuthDto.PasswordResetRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
+    }
 }

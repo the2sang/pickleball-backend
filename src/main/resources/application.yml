@@ -52,6 +52,8 @@ spring:
         debug: ${SMTP_DEBUG:true}
 
 app:
+  auth:
+    password-reset-url: http://localhost:5173/find-password
   security:
     login:
       failure-threshold: ${LOGIN_FAILURE_THRESHOLD:5}
