@@ -33,10 +33,10 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-        private static final String ALPHABETS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private static final String UPPERCASE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         private static final String DIGITS = "0123456789";
-        private static final String ALPHA_NUM = ALPHABETS + DIGITS;
-        private static final int TEMP_PASSWORD_LENGTH = 6;
+        private static final String UPPERCASE_AND_DIGITS = UPPERCASE_LETTERS + DIGITS;
+        private static final int TEMP_PASSWORD_LENGTH = 4;
 
         private final SecureRandom secureRandom = new SecureRandom();
 
@@ -195,10 +195,10 @@ public class AuthService {
 
         private String generateTemporaryPassword() {
                 List<Character> chars = new ArrayList<>(TEMP_PASSWORD_LENGTH);
-                chars.add(ALPHABETS.charAt(secureRandom.nextInt(ALPHABETS.length())));
+                chars.add(UPPERCASE_LETTERS.charAt(secureRandom.nextInt(UPPERCASE_LETTERS.length())));
                 chars.add(DIGITS.charAt(secureRandom.nextInt(DIGITS.length())));
                 for (int i = 2; i < TEMP_PASSWORD_LENGTH; i++) {
-                        chars.add(ALPHA_NUM.charAt(secureRandom.nextInt(ALPHA_NUM.length())));
+                        chars.add(UPPERCASE_AND_DIGITS.charAt(secureRandom.nextInt(UPPERCASE_AND_DIGITS.length())));
                 }
                 Collections.shuffle(chars, secureRandom);
 
