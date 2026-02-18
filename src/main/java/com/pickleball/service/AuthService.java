@@ -2,12 +2,14 @@ package com.pickleball.service;
 
 import com.pickleball.dto.AuthDto;
 import com.pickleball.entity.Account;
+import com.pickleball.entity.Circle;
 import com.pickleball.entity.Member;
 import com.pickleball.entity.MemberRole;
 import com.pickleball.entity.Partner;
 import com.pickleball.exception.BusinessException;
 import com.pickleball.exception.BusinessException.ErrorCode;
 import com.pickleball.repository.AccountRepository;
+import com.pickleball.repository.CircleRepository;
 import com.pickleball.repository.MemberRepository;
 import com.pickleball.repository.MemberRoleRepository;
 import com.pickleball.repository.PartnerRepository;
@@ -43,6 +45,7 @@ public class AuthService {
         private final AuthenticationManager authenticationManager;
         private final AccountRepository accountRepository;
         private final MemberRepository memberRepository;
+        private final CircleRepository circleRepository;
         private final MemberRoleRepository memberRoleRepository;
         private final PartnerRepository partnerRepository;
         private final JwtTokenProvider jwtTokenProvider;
@@ -168,6 +171,12 @@ public class AuthService {
                                         .orElse(null);
                 }
 
+                if ("CIRCLE".equals(type)) {
+                        return circleRepository.findByAccountId(account.getId())
+                                        .map(c -> c.getPartnerEmail())
+                                        .orElse(null);
+                }
+
                 // MEMBER or others
                 return memberRepository.findByAccountId(account.getId())
                                 .map(m -> m.getEmail())
@@ -186,7 +195,9 @@ public class AuthService {
                 }
 
                 return partnerRepository.findByPartnerEmail(email)
-                                .flatMap(partner -> accountRepository.findById(partner.getAccountId()));
+                                .flatMap(partner -> accountRepository.findById(partner.getAccountId()))
+                                .or(() -> circleRepository.findByPartnerEmail(email)
+                                                .flatMap(circle -> accountRepository.findById(circle.getAccountId())));
         }
 
         private String normalizeEmail(String email) {
@@ -308,6 +319,53 @@ public class AuthService {
                 memberRoleRepository.save(role);
 
                 // 4. 자동 로그인
+                return login(new AuthDto.LoginRequest(
+                                request.getUsername(), request.getPassword()));
+        }
+
+        @Transactional
+        public AuthDto.TokenResponse signupCircle(AuthDto.PartnerSignupRequest request) {
+                if (accountRepository.existsByUsername(request.getUsername())) {
+                        throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+                }
+
+                if (!Boolean.TRUE.equals(request.getAgreeService()) || !Boolean.TRUE.equals(request.getAgreePrivacy())) {
+                        throw new BusinessException(ErrorCode.TERMS_REQUIRED);
+                }
+
+                Account account = Account.builder()
+                                .username(request.getUsername())
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .accountType("CIRCLE")
+                                .name(request.getName())
+                                .build();
+                accountRepository.save(account);
+
+                Circle circle = Circle.builder()
+                                .accountId(account.getId())
+                                .businessPartner(request.getBusinessPartner())
+                                .owner(request.getOwner())
+                                .phoneNumber(request.getPhoneNumber())
+                                .partnerAddress(request.getPartnerAddress())
+                                .partnerLevel("1")
+                                .partnerEmail(request.getPartnerEmail())
+                                .partnerAccount(request.getPartnerAccount())
+                                .partnerBank(request.getPartnerBank())
+                                .howToPay(request.getHowToPay())
+                                .registDate(LocalDate.now())
+                                .agreeServiceYn(Boolean.TRUE.equals(request.getAgreeService()) ? "Y" : "N")
+                                .agreePrivacyYn(Boolean.TRUE.equals(request.getAgreePrivacy()) ? "Y" : "N")
+                                .agreeMarketingYn(Boolean.TRUE.equals(request.getAgreeMarketing()) ? "Y" : "N")
+                                .agreeAllYn(Boolean.TRUE.equals(request.getAgreeAll()) ? "Y" : "N")
+                                .build();
+                circleRepository.save(circle);
+
+                MemberRole role = MemberRole.builder()
+                                .username(request.getUsername())
+                                .roles("ROLE_CIRCLE")
+                                .build();
+                memberRoleRepository.save(role);
+
                 return login(new AuthDto.LoginRequest(
                                 request.getUsername(), request.getPassword()));
         }

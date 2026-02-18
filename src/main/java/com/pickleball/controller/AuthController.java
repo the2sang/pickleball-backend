@@ -57,6 +57,12 @@ public class AuthController {
         return ResponseEntity.status(201).body(authService.signupPartner(request));
     }
 
+    @PostMapping("/signup/circle")
+    public ResponseEntity<AuthDto.TokenResponse> signupCircle(
+            @Valid @RequestBody AuthDto.PartnerSignupRequest request) {
+        return ResponseEntity.status(201).body(authService.signupCircle(request));
+    }
+
     /**
      * 이메일로 아이디 찾기
      * POST /api/v1/auth/username/recover

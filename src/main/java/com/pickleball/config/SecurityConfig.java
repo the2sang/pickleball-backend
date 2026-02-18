@@ -48,6 +48,7 @@ public class SecurityConfig {
                 // 인증 없이 접근 가능한 엔드포인트
                 .requestMatchers("/api/v1/auth/**","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/partners/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/circles/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/courts/*/slots/**").permitAll()
                 // 사업주 전용 엔드포인트
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
