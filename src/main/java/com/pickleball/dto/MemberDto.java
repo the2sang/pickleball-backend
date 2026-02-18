@@ -49,4 +49,16 @@ public class MemberDto {
         private String gameLevel;
         private String duprPoint;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PasswordChangeRequest {
+        @NotBlank
+        private String currentPassword;
+        @NotBlank
+        private String newPassword;
+        @NotBlank
+        private String confirmPassword;
+    }
 }

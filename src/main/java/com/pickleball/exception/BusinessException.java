@@ -28,6 +28,8 @@ public class BusinessException extends RuntimeException {
         INVALID_TIME_SLOT(HttpStatus.BAD_REQUEST, "INVALID_TIME_SLOT", "유효하지 않은 시간대입니다"),
         INVALID_REQUEST_STATE(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_STATE", "요청 상태가 올바르지 않습니다"),
         TERMS_REQUIRED(HttpStatus.BAD_REQUEST, "TERMS_REQUIRED", "필수 약관에 동의해야 가입할 수 있습니다"),
+        PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "PASSWORD_CONFIRM_MISMATCH", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다"),
+        SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "SAME_AS_OLD_PASSWORD", "새 비밀번호는 현재 비밀번호와 달라야 합니다"),
 
         // 403
         MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "MEMBER_SUSPENDED", "해당 사업장에서 정지된 회원입니다"),
@@ -37,6 +39,7 @@ public class BusinessException extends RuntimeException {
         COURT_CLOSED(HttpStatus.FORBIDDEN, "COURT_CLOSED", "예약이 마감된 코트입니다"),
         NOT_OWNER(HttpStatus.FORBIDDEN, "NOT_OWNER", "본인의 예약만 취소할 수 있습니다"),
         RENTAL_NOT_ALLOWED(HttpStatus.FORBIDDEN, "RENTAL_NOT_ALLOWED", "일반 회원은 대관 시간대를 예약할 수 없습니다"),
+        CURRENT_PASSWORD_INVALID(HttpStatus.FORBIDDEN, "CURRENT_PASSWORD_INVALID", "현재 비밀번호가 올바르지 않습니다"),
 
         // 404
         COURT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURT_NOT_FOUND", "코트를 찾을 수 없습니다"),

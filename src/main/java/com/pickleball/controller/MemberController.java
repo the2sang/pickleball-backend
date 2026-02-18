@@ -34,4 +34,12 @@ public class MemberController {
             @Valid @RequestBody MemberDto.ProfileUpdateRequest request) {
         return ResponseEntity.ok(memberService.updateProfile(authentication.getName(), request));
     }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            Authentication authentication,
+            @Valid @RequestBody MemberDto.PasswordChangeRequest request) {
+        memberService.changePassword(authentication.getName(), request);
+        return ResponseEntity.noContent().build();
+    }
 }
