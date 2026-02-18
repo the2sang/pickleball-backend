@@ -29,4 +29,17 @@ public interface CircleRepository extends JpaRepository<Circle, Long> {
             ORDER BY c.businessPartner
         """)
     Page<Circle> findActiveCircles(Pageable pageable);
+
+    @Query("""
+            SELECT c FROM Circle c
+            ORDER BY c.registDate DESC, c.businessPartner
+        """)
+    Page<Circle> findAllCircles(Pageable pageable);
+
+    @Query("""
+            SELECT c FROM Circle c
+            WHERE c.businessPartner LIKE %:keyword%
+            ORDER BY c.registDate DESC, c.businessPartner
+        """)
+    Page<Circle> searchAllCircles(@Param("keyword") String keyword, Pageable pageable);
 }

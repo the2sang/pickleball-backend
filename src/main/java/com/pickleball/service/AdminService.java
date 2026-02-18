@@ -2,9 +2,11 @@ package com.pickleball.service;
 
 import com.pickleball.dto.AdminDto;
 import com.pickleball.dto.PartnerDto;
+import com.pickleball.entity.Circle;
 import com.pickleball.entity.Partner;
 import com.pickleball.exception.BusinessException;
 import com.pickleball.exception.BusinessException.ErrorCode;
+import com.pickleball.repository.CircleRepository;
 import com.pickleball.repository.CourtRepository;
 import com.pickleball.repository.PartnerRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.List;
 public class AdminService {
 
     private final PartnerRepository partnerRepository;
+    private final CircleRepository circleRepository;
     private final CourtRepository courtRepository;
 
     /**
@@ -40,6 +43,27 @@ public class AdminService {
         return PartnerDto.PageResponse.<AdminDto.PartnerDetailResponse>builder()
                 .data(data)
                 .total(partnerPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerDto.PageResponse<AdminDto.PartnerDetailResponse> getAllCircles(
+            String keyword, int page, int size) {
+
+        var pageable = PageRequest.of(page - 1, size);
+        var circlePage = (keyword != null && !keyword.isBlank())
+                ? circleRepository.searchAllCircles(keyword, pageable)
+                : circleRepository.findAllCircles(pageable);
+
+        List<AdminDto.PartnerDetailResponse> data = circlePage.getContent().stream()
+                .map(this::toDetailResponse)
+                .toList();
+
+        return PartnerDto.PageResponse.<AdminDto.PartnerDetailResponse>builder()
+                .data(data)
+                .total(circlePage.getTotalElements())
                 .page(page)
                 .size(size)
                 .build();
@@ -89,6 +113,41 @@ public class AdminService {
         return toDetailResponse(partner);
     }
 
+    @Transactional(readOnly = true)
+    public AdminDto.PartnerDetailResponse getCircleDetail(Long id) {
+        Circle circle = circleRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return toDetailResponse(circle);
+    }
+
+    @Transactional
+    public AdminDto.PartnerDetailResponse updateCircle(Long id, AdminDto.PartnerUpdateRequest request) {
+        Circle circle = circleRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        circle.setBusinessPartner(request.getBusinessPartner());
+        circle.setOwner(request.getOwner());
+        circle.setPhoneNumber(request.getPhoneNumber());
+        circle.setPartnerAddress(request.getPartnerAddress());
+        circle.setPartnerEmail(request.getPartnerEmail());
+        circle.setPartnerAccount(request.getPartnerAccount());
+        circle.setPartnerBank(request.getPartnerBank());
+        circle.setHowToPay(request.getHowToPay());
+
+        circleRepository.save(circle);
+        return toDetailResponse(circle);
+    }
+
+    @Transactional
+    public AdminDto.PartnerDetailResponse approveCircle(Long id) {
+        Circle circle = circleRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        circle.setPartnerLevel("1");
+        circleRepository.save(circle);
+        return toDetailResponse(circle);
+    }
+
     private AdminDto.PartnerDetailResponse toDetailResponse(Partner p) {
         long courtCount = courtRepository
                 .findByPartnerIdOrderByCourtName(p.getId()).size();
@@ -107,6 +166,24 @@ public class AdminService {
                 .partnerBank(p.getPartnerBank())
                 .howToPay(p.getHowToPay())
                 .courtCount(courtCount)
+                .build();
+    }
+
+    private AdminDto.PartnerDetailResponse toDetailResponse(Circle c) {
+        return AdminDto.PartnerDetailResponse.builder()
+                .id(c.getId())
+                .accountId(c.getAccountId())
+                .businessPartner(c.getBusinessPartner())
+                .owner(c.getOwner())
+                .phoneNumber(c.getPhoneNumber())
+                .partnerAddress(c.getPartnerAddress())
+                .partnerLevel(c.getPartnerLevel())
+                .partnerEmail(c.getPartnerEmail())
+                .registDate(c.getRegistDate() != null ? c.getRegistDate().toString() : null)
+                .partnerAccount(c.getPartnerAccount())
+                .partnerBank(c.getPartnerBank())
+                .howToPay(c.getHowToPay())
+                .courtCount(0)
                 .build();
     }
 }
