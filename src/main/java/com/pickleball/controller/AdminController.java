@@ -55,4 +55,29 @@ public class AdminController {
     public ResponseEntity<AdminDto.PartnerDetailResponse> approvePartner(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.approvePartner(id));
     }
+
+    @GetMapping("/circles")
+    public ResponseEntity<PartnerDto.PageResponse<AdminDto.PartnerDetailResponse>> getCircles(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(adminService.getAllCircles(keyword, page, size));
+    }
+
+    @GetMapping("/circles/{id}")
+    public ResponseEntity<AdminDto.PartnerDetailResponse> getCircleDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getCircleDetail(id));
+    }
+
+    @PutMapping("/circles/{id}")
+    public ResponseEntity<AdminDto.PartnerDetailResponse> updateCircle(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminDto.PartnerUpdateRequest request) {
+        return ResponseEntity.ok(adminService.updateCircle(id, request));
+    }
+
+    @PutMapping("/circles/{id}/approve")
+    public ResponseEntity<AdminDto.PartnerDetailResponse> approveCircle(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.approveCircle(id));
+    }
 }
