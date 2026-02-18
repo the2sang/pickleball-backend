@@ -23,4 +23,12 @@ public class CircleController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(circleService.getCircles(keyword, page, size));
     }
+
+    @GetMapping("/options")
+    public ResponseEntity<CircleDto.PageResponse<CircleDto.Response>> getCircleOptions(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return ResponseEntity.ok(circleService.getCircleOptions(keyword, page, size));
+    }
 }
