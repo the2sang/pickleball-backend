@@ -64,7 +64,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:dGhpc0lzQVZlcnlMb25nU2VjcmV0S2V5Rm9yUGlja2xlYmFsbEFwaUF0TGVhc3QzMkJ5dGVz}
     expiration-ms: 7200000
-    refresh-expiration-ms: 31536000000
+    refresh-expiration-ms: 7776000000
 
 # Springdoc
 springdoc:
