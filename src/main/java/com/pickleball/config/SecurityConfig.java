@@ -105,6 +105,8 @@ public class SecurityConfig {
                 "http://127.0.0.1:*",
                 "https://*.railway.app",
                 "https://*.up.railway.app",
+                "https://*.vercel.app",
+                "https://vercel.app",
                 "https://*.ngrok-free.dev",
                 "http://*.ngrok-free.dev",
                 "https://*.ngrok-free.app",
