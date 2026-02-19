@@ -42,4 +42,12 @@ public interface CircleRepository extends JpaRepository<Circle, Long> {
             ORDER BY c.registDate DESC, c.businessPartner
         """)
     Page<Circle> searchAllCircles(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query(value = """
+            SELECT c.id
+            FROM Circle c
+            JOIN Account a ON c.accountId = a.id
+            WHERE a.username = :username
+            """)
+    Optional<Long> findCircleIdByUsername(@Param("username") String username);
 }

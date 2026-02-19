@@ -53,6 +53,7 @@ public class SecurityConfig {
                 // 사업주 전용 엔드포인트
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/partner-manage/**").hasRole("PARTNER")
+                .requestMatchers("/api/v1/circle-manage/**").hasRole("CIRCLE")
 //                .requestMatchers(
 //                            "/v3/api-docs/**",
 //                            "/swagger-ui/**",
