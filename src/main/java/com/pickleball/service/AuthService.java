@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,17 @@ public class AuthService {
                                 .available(true)
                                 .message("사용 가능한 아이디입니다")
                                 .build();
+        }
+
+        @Transactional(readOnly = true)
+        public List<AuthDto.QuickAccountResponse> getQuickAccounts() {
+                return accountRepository.findAll(Sort.by(Sort.Direction.ASC, "username")).stream()
+                                .map(account -> AuthDto.QuickAccountResponse.builder()
+                                                .username(account.getUsername())
+                                                .name(account.getName())
+                                                .accountType(account.getAccountType())
+                                                .build())
+                                .toList();
         }
 
         public AuthDto.TokenResponse login(AuthDto.LoginRequest request) {

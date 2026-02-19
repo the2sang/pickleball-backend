@@ -150,4 +150,14 @@ public class AuthDto {
     public static class MessageResponse {
         private String message;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuickAccountResponse {
+        private String username;
+        private String name;
+        private String accountType;
+    }
 }

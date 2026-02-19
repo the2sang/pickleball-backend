@@ -9,6 +9,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -25,6 +27,11 @@ public class AuthController {
     public ResponseEntity<AuthDto.UsernameCheckResponse> checkUsername(
             @Valid @ModelAttribute AuthDto.UsernameCheckRequest request) {
         return ResponseEntity.ok(authService.checkUsername(request));
+    }
+
+    @GetMapping("/quick-accounts")
+    public ResponseEntity<List<AuthDto.QuickAccountResponse>> getQuickAccounts() {
+        return ResponseEntity.ok(authService.getQuickAccounts());
     }
 
     /**
