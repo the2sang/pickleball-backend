@@ -62,7 +62,7 @@ public class ReservationService {
 
                                         int count = rows.size();
                                         int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber()
-                                                        : 6;
+                                                        : 30;
                                         boolean isFull = count >= capacity;
 
                                         // Check if closed by partner setting (Rentals might be treated differently?)
@@ -114,7 +114,7 @@ public class ReservationService {
                                 .courtId(court.getId())
                                 .courtName(court.getCourtName())
                                 .courtLevel(court.getCourtLevel())
-                                .personnelNumber(court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6)
+                .personnelNumber(court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 30)
                                 .slots(slots)
                                 .build();
         }
@@ -132,7 +132,7 @@ public class ReservationService {
                         Long courtId, LocalDate gameDate, String timeSlot) {
                 Court court = courtRepository.findById(courtId)
                                 .orElseThrow(() -> new BusinessException(ErrorCode.COURT_NOT_FOUND));
-                int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6;
+                int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 30;
 
                 List<ReservationRepositoryCustom.ActivePlayerRow> rows = reservationRepository
                                 .findActivePlayerRows(courtId, gameDate, timeSlot);
@@ -212,7 +212,7 @@ public class ReservationService {
                                 });
 
                 // 4. 정원 확인 (비관적 잠금)
-                int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 6;
+                int capacity = court.getPersonnelNumber() != null ? court.getPersonnelNumber() : 30;
                 int currentCount = reservationRepository.countWithLock(
                                 request.getCourtId(), request.getGameDate(), request.getTimeSlot());
 

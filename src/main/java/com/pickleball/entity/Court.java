@@ -24,7 +24,7 @@ public class Court {
     private String courtName;
 
     @Column(name = "personnel_number")
-    private Short personnelNumber = 6;
+    private Short personnelNumber = 30;
 
     @Column(name = "court_level", length = 10)
     private String courtLevel;
