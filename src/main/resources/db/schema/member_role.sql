@@ -1,0 +1,17 @@
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_ADMIN', 'admin', '2026-02-12 12:35:08.685585', '2026-02-12 12:35:08.685585');
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_PARTNER', 'kairos', '2026-02-12 22:01:49.827407', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_PARTNER', 'zerozero', '2026-02-12 22:08:36.155973', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_PARTNER', 'pickrally', '2026-02-12 22:10:42.261498', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user1', '2026-02-12 22:15:01.961262', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user2', '2026-02-12 22:33:45.785124', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user3', '2026-02-12 22:34:57.339394', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user4', '2026-02-12 22:36:42.265969', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user5', '2026-02-12 22:38:15.204763', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user6', '2026-02-12 22:39:36.895746', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user7', '2026-02-12 22:40:59.487606', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user8', '2026-02-12 22:42:31.082928', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user9', '2026-02-12 22:43:44.637534', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user10', '2026-02-12 22:47:14.855363', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user11', '2026-02-13 06:35:24.660054', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user12', '2026-02-13 06:36:30.521443', null);
+INSERT INTO pickleball.member_role (roles, username, create_date, update_date) VALUES ('ROLE_USER', 'user13', '2026-02-13 06:37:47.567905', null);
