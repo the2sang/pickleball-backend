@@ -39,7 +39,7 @@ FROM account a
 WHERE a.username IN ('user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10');
 
 -- Member Role 추가 (일반 사용자)
-INSERT INTO member_role (account_id, role_name)
-SELECT a.id, 'ROLE_USER'
+INSERT INTO member_role (username, roles)
+SELECT a.username, 'ROLE_USER'
 FROM account a
 WHERE a.username IN ('user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10');

@@ -88,15 +88,13 @@ WHERE p.business_partner = '용인 카이로스 피클볼 클럽'
 AND NOT EXISTS (SELECT 1 FROM court c WHERE c.partner_id = p.id AND c.court_name = '두나미스');
 
 -- 8. 오늘 날짜의 06:00~09:00 시간대 스케줄 생성 (OPEN_GAME)
-INSERT INTO court_schedule (court_id, game_date, start_time, end_time, schedule_type, create_date, update_date)
+INSERT INTO court_schedule (court_id, game_date, start_time, end_time, schedule_type)
 SELECT
     c.id,
     CURRENT_DATE,
     '06:00'::TIME,
     '09:00'::TIME,
-    'OPEN_GAME',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
+    'OPEN_GAME'
 FROM court c
 INNER JOIN partner p ON c.partner_id = p.id
 WHERE p.business_partner = '용인 카이로스 피클볼 클럽'
